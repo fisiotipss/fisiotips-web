@@ -31,4 +31,9 @@ export const videos: VideoCaso[] = [
     embedUrl: "https://drive.google.com/file/d/1UJ3tDLrbKNeqFYfzg9RAvy62H1MV4gJd/preview",
     thumbnail: "/images/video-rodilla.jpg",
   },
+  {
+    titulo: "Dolor de rodilla hace años sin solución médica",
+    embedUrl: "https://drive.google.com/file/d/1c5shB3Fk2BEo2TV-eY9BmPy4QoJUYNlp/preview",
+    thumbnail: "/images/video-rodilla-cronica.jpg",
+  },
 ];

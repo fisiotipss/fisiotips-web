@@ -9,11 +9,11 @@ export default function Videos() {
 
   return (
     <section id="videos" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-      <h2 className="text-center text-2xl font-bold text-primary sm:text-3xl">
-        Videos — Que te lo expliquen ellos…
+      <h2 className="text-center text-2xl font-bold text-primary underline sm:text-3xl">
+        Que te lo expliquen ellos…
       </h2>
       <p className="mx-auto mt-3 max-w-2xl text-center text-gray-600">
-        Casos reales de pacientes contando su proceso de recuperación.
+        (Casos reales seleccionados, hay +100 casos)
       </p>
 
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
