@@ -3,7 +3,7 @@
 export const marca = {
   nombre: "Joaquín Cazenave",
   slogan: "Fisiotips",
-  whatsapp: "https://wa.me/59892137467",
+  whatsapp: "https://w.app/reactive",
   instagram: "https://instagram.com/fisiotipss__",
   email: "jcazenave12@gmail.com",
 };
@@ -109,7 +109,6 @@ export const consulta = {
   ],
   descripcion:
     "1 hora y media dedicada solo a tu caso — no 15 minutos como en mutualistas u otros centros. Completá tus datos y adjuntá tus estudios si los tenés. Después de enviarlo, vas a poder pagar la evaluación de forma segura con Mercado Pago. Una vez confirmado el pago, escribinos por WhatsApp para coordinar el día y horario.",
-  precio: 45,
-  moneda: "USD", // TODO: confirmar con la cuenta real de Mercado Pago si soporta USD o si debe ser ARS/UYU
-  precioTexto: "USD 45",
+  precioTexto: "$1.900 UYU",
+  mercadoPagoLink: "https://mpago.la/1U58qCx",
 };

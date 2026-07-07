@@ -9,7 +9,7 @@ const demandaFisicaOpciones = [
   { value: "intenso", label: "Trabajo con esfuerzo físico intenso / carga" },
 ];
 
-type Estado = "idle" | "enviando" | "error" | "listo";
+type Estado = "idle" | "enviando" | "error";
 
 export default function ReservaForm() {
   const [estado, setEstado] = useState<Estado>("idle");
@@ -33,14 +33,7 @@ export default function ReservaForm() {
         throw new Error(data.error || "No se pudo enviar el formulario.");
       }
 
-      const data = await res.json();
-
-      if (data.initPoint) {
-        window.location.href = data.initPoint;
-        return;
-      }
-
-      setEstado("listo");
+      window.location.href = consulta.mercadoPagoLink;
     } catch (err) {
       setEstado("error");
       setErrorMsg(err instanceof Error ? err.message : "Ocurrió un error inesperado.");
@@ -124,12 +117,6 @@ export default function ReservaForm() {
 
         {estado === "error" && (
           <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{errorMsg}</p>
-        )}
-
-        {estado === "listo" && (
-          <p className="rounded-lg bg-primary-light px-4 py-2 text-sm text-primary">
-            Recibimos tus datos. En breve vas a poder completar el pago.
-          </p>
         )}
 
         <button

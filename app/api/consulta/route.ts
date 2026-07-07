@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
-import { MercadoPagoConfig, Preference } from "mercadopago";
-import { randomUUID } from "crypto";
-import { consulta } from "@/content/site-copy";
 
 export const runtime = "nodejs";
 
@@ -59,9 +56,8 @@ export async function POST(req: NextRequest) {
       attachment = { filename: archivo.name, content: buffer.toString("base64") };
     }
 
-    const referenciaExterna = randomUUID();
-
-    // 1. Enviar email con los datos del formulario (siempre, no depende del pago).
+    // Enviar email con los datos del formulario. El pago se completa aparte,
+    // en el link de Mercado Pago al que redirige el formulario.
     if (process.env.RESEND_API_KEY && process.env.NOTIFY_EMAIL) {
       const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -74,7 +70,6 @@ export async function POST(req: NextRequest) {
         ["Nivel de esfuerzo físico laboral", datos.demandaFisica],
         ["Motivo de consulta", datos.motivoConsulta],
         ["Tratamientos previos y resultados", datos.tratamientosPrevios || "—"],
-        ["Referencia", referenciaExterna],
       ];
 
       const html = `
@@ -100,43 +95,7 @@ export async function POST(req: NextRequest) {
       console.warn("RESEND_API_KEY o NOTIFY_EMAIL no configurados; se omite el envío de email.");
     }
 
-    // 2. Crear preferencia de pago en Mercado Pago.
-    let initPoint: string | undefined;
-
-    if (process.env.MP_ACCESS_TOKEN) {
-      const client = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
-      const preference = new Preference(client);
-
-      const baseUrl = process.env.SITE_URL || req.nextUrl.origin;
-
-      const result = await preference.create({
-        body: {
-          items: [
-            {
-              id: "consulta-inicial",
-              title: "Evaluación inicial de fisioterapia — Joaquín Cazenave",
-              quantity: 1,
-              unit_price: consulta.precio,
-              currency_id: consulta.moneda,
-            },
-          ],
-          external_reference: referenciaExterna,
-          back_urls: {
-            success: `${baseUrl}/gracias`,
-            failure: `${baseUrl}/pago-fallido`,
-            pending: `${baseUrl}/gracias`,
-          },
-          auto_return: "approved",
-          notification_url: process.env.MP_WEBHOOK_URL || `${baseUrl}/api/mp-webhook`,
-        },
-      });
-
-      initPoint = result.init_point;
-    } else {
-      console.warn("MP_ACCESS_TOKEN no configurado; se omite la creación de la preferencia de pago.");
-    }
-
-    return NextResponse.json({ ok: true, initPoint, referenciaExterna });
+    return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error en /api/consulta:", error);
     return NextResponse.json(
