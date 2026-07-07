@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { consulta } from "@/content/site-copy";
+import Reveal from "./Reveal";
 
 const demandaFisicaOpciones = [
   { value: "sedentario", label: "Trabajo mayormente sentado / sedentario" },
@@ -42,15 +43,17 @@ export default function ReservaForm() {
 
   return (
     <section id="consulta" className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-      <h2 className="text-center text-2xl font-bold text-primary sm:text-3xl">
-        {consulta.titulo}
-      </h2>
-      <p className="mt-3 text-center text-gray-600">{consulta.descripcion}</p>
-      <p className="mt-1 text-center text-lg font-semibold text-primary">
-        {consulta.precioTexto} · {consulta.duracion}
-      </p>
+      <Reveal>
+        <h2 className="text-center text-2xl font-bold text-primary sm:text-3xl">
+          {consulta.titulo}
+        </h2>
+        <p className="mt-3 text-center text-gray-600">{consulta.descripcion}</p>
+        <p className="mt-1 text-center text-lg font-semibold text-primary">
+          {consulta.precioTexto} · {consulta.duracion}
+        </p>
+      </Reveal>
 
-      <div className="mt-6 rounded-2xl border border-primary/20 bg-primary-light p-6">
+      <Reveal delay={100} className="mt-6 rounded-2xl border border-primary/20 bg-primary-light p-6">
         <h3 className="font-semibold text-primary">Qué incluye la evaluación</h3>
         <ul className="mt-3 space-y-2">
           {consulta.incluye.map((item, i) => (
@@ -60,7 +63,7 @@ export default function ReservaForm() {
             </li>
           ))}
         </ul>
-      </div>
+      </Reveal>
 
       <form
         onSubmit={onSubmit}

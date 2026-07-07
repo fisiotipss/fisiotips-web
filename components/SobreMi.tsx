@@ -1,20 +1,21 @@
 import { sobreMi } from "@/content/site-copy";
 import WhatsAppButton from "./WhatsAppButton";
 import SafeImage from "./SafeImage";
+import Reveal from "./Reveal";
 
 export default function SobreMi() {
   return (
     <section id="sobre-mi" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
       <div className="grid gap-10 md:grid-cols-2 md:items-center">
-        <div className="mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl bg-primary-light">
+        <Reveal className="mx-auto aspect-[3/4] w-full max-w-sm overflow-hidden rounded-2xl bg-primary-light">
           <SafeImage
             src={sobreMi.fotos[0]}
             alt={`Foto de ${sobreMi.titulo}`}
             className="h-full w-full object-cover"
           />
-        </div>
+        </Reveal>
 
-        <div>
+        <Reveal delay={150}>
           <span className="inline-flex items-center gap-2 rounded-full bg-primary-light px-4 py-1 text-sm font-semibold text-celeste">
             <svg viewBox="0 0 30 20" className="h-3.5 w-5 flex-shrink-0 rounded-sm" aria-hidden>
               <rect width="30" height="20" fill="#fff" />
@@ -32,7 +33,7 @@ export default function SobreMi() {
           <div className="mt-6">
             <WhatsAppButton texto="Contame tu caso" />
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   );
