@@ -5,13 +5,13 @@ import Reveal from "./Reveal";
 
 export default function Hero() {
   return (
-    <section id="top" className="bg-primary-light">
+    <section id="top" className="bg-gradient-to-b from-[#0d1b24] to-[#17313f]">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 md:items-center md:py-24">
         <Reveal>
-          <h1 className="text-3xl font-extrabold leading-tight text-primary sm:text-4xl md:text-5xl">
+          <h1 className="text-3xl font-extrabold leading-tight text-white sm:text-4xl md:text-5xl">
             {hero.titulo}
           </h1>
-          <p className="mt-5 text-lg text-gray-700">{hero.subtitulo}</p>
+          <p className="mt-5 text-lg text-white/80">{hero.subtitulo}</p>
           <div className="mt-8 flex flex-wrap gap-4">
             <a
               href="#consulta"

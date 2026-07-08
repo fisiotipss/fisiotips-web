@@ -18,8 +18,8 @@ export default function Home() {
         <Problema />
         <SobreMi />
         <Proceso />
-        <Beneficios />
         <Videos />
+        <Beneficios />
         <FAQ />
         <ReservaForm />
       </main>

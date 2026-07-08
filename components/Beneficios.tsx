@@ -3,7 +3,8 @@ import Reveal from "./Reveal";
 
 export default function Beneficios() {
   return (
-    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+    <section className="bg-gradient-to-b from-[#a8c3d1] to-[#d9e8ee]">
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
       <Reveal>
         <h2 className="text-center text-2xl font-bold text-primary sm:text-3xl">
           {beneficios.titulo}
@@ -48,6 +49,7 @@ export default function Beneficios() {
           Quiero empezar mi proceso
         </a>
       </Reveal>
+      </div>
     </section>
   );
 }

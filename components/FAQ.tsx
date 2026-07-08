@@ -3,7 +3,7 @@ import Reveal from "./Reveal";
 
 export default function FAQ() {
   return (
-    <section id="faq" className="bg-primary-light/60 py-16">
+    <section id="faq" className="bg-gradient-to-b from-[#d9e8ee] to-white py-16">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
         <Reveal>
           <h2 className="text-center text-2xl font-bold text-primary sm:text-3xl">

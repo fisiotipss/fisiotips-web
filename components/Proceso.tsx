@@ -3,10 +3,10 @@ import Reveal from "./Reveal";
 
 export default function Proceso() {
   return (
-    <section id="proceso" className="bg-primary-light/60 py-16">
+    <section id="proceso" className="bg-gradient-to-b from-[#3b5f7c] to-[#6f93aa] py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <Reveal>
-          <h2 className="text-center text-2xl font-bold text-primary sm:text-3xl">
+          <h2 className="text-center text-2xl font-bold text-white sm:text-3xl">
             {proceso.titulo}
           </h2>
         </Reveal>
