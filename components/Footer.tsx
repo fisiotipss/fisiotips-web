@@ -1,10 +1,14 @@
 import { marca, puntosAtencion } from "@/content/site-copy";
+import LogoMark from "./LogoMark";
 
 export default function Footer() {
   return (
     <footer className="border-t border-black/5 bg-white py-10">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 text-center sm:px-6">
-        <div className="font-bold text-celeste">{marca.nombre}</div>
+        <div className="flex items-center gap-2">
+          <LogoMark className="h-7 w-7" variant="light" />
+          <span className="font-bold uppercase tracking-wide text-[#1b2b36]">{marca.slogan}</span>
+        </div>
         <p className="text-sm text-gray-500">
           Atención presencial en {puntosAtencion.join(" y ")}
         </p>
