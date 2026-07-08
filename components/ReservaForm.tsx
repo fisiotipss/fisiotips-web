@@ -75,7 +75,7 @@ export default function ReservaForm() {
       >
         <div className="grid gap-5 sm:grid-cols-2">
           <Campo label="Nombre completo" name="nombre" required />
-          <Campo label="Teléfono de emergencia" name="telefonoEmergencia" required type="tel" />
+          <Campo label="Teléfono de emergencia" name="telefonoEmergencia" type="tel" />
           <Campo label="Edad" name="edad" required type="number" min={0} />
           <Campo label="Deporte que realiza" name="deporte" required />
           <Campo label="Ciudad / país" name="ubicacion" required />

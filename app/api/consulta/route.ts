@@ -29,7 +29,6 @@ export async function POST(req: NextRequest) {
 
     const camposObligatorios: (keyof typeof datos)[] = [
       "nombre",
-      "telefonoEmergencia",
       "edad",
       "deporte",
       "ubicacion",
@@ -66,7 +65,7 @@ export async function POST(req: NextRequest) {
 
       const filas = [
         ["Nombre completo", datos.nombre],
-        ["Teléfono de emergencia", datos.telefonoEmergencia],
+        ["Teléfono de emergencia", datos.telefonoEmergencia || "—"],
         ["Edad", datos.edad],
         ["Deporte", datos.deporte],
         ["Ciudad / país", datos.ubicacion],
