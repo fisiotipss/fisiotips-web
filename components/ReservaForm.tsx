@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { consulta } from "@/content/site-copy";
+import { consulta, sucursales, puntosAtencion } from "@/content/site-copy";
 import Reveal from "./Reveal";
 
 const demandaFisicaOpciones = [
@@ -51,6 +51,9 @@ export default function ReservaForm() {
         <p className="mt-1 text-center text-lg font-semibold text-primary">
           {consulta.precioTexto} · {consulta.duracion}
         </p>
+        <p className="mt-1 text-center text-sm text-gray-500">
+          Atención presencial en {puntosAtencion.join(" y ")}
+        </p>
       </Reveal>
 
       <Reveal delay={100} className="mt-6 rounded-2xl border border-primary/20 bg-primary-light p-6">
@@ -96,6 +99,30 @@ export default function ReservaForm() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Sucursal más conveniente
+            </label>
+            <select
+              name="sucursal"
+              required
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-celeste focus:outline-none focus:ring-1 focus:ring-celeste"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Seleccioná una opción
+              </option>
+              {sucursales.map((op) => (
+                <option key={op.value} value={op.value}>
+                  {op.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-400">
+              La dirección exacta te la pasamos por WhatsApp una vez confirmado el pago.
+            </p>
           </div>
         </div>
 

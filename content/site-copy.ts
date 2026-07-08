@@ -98,6 +98,16 @@ export const faq = {
   ],
 };
 
+export const puntosAtencion = ["Montevideo", "Ciudad de la Costa"];
+
+export const sucursales = [
+  { value: "montevideo-cordon", label: "Montevideo - Cordón" },
+  { value: "montevideo-sayago", label: "Montevideo - Sayago" },
+  { value: "costa-lagomar", label: "Ciudad de la Costa - Lagomar" },
+  { value: "costa-shangrila", label: "Ciudad de la Costa - Shangrilá" },
+  { value: "costa-ambos", label: "Ciudad de la Costa (me sirve cualquiera de los dos)" },
+];
+
 export const consulta = {
   titulo: "Reservá tu evaluación",
   duracion: "1 hora y media",
@@ -108,7 +118,7 @@ export const consulta = {
     "Garantía: si vemos que tu caso no es para nosotros, te devolvemos el 50% de lo pagado",
   ],
   descripcion:
-    "1 hora y media dedicada solo a tu caso — no 15 minutos como en mutualistas u otros centros. Completá tus datos y adjuntá tus estudios si los tenés. Después de enviarlo, vas a poder pagar la evaluación de forma segura con Mercado Pago. Una vez confirmado el pago, escribinos por WhatsApp para coordinar el día y horario.",
+    "1 hora y media dedicada solo a tu caso — no 15 minutos como en mutualistas u otros centros. Completá tus datos y adjuntá tus estudios si los tenés. Después de enviarlo, vas a poder pagar la evaluación de forma segura con Mercado Pago. Una vez confirmado el pago, te vamos a escribir por WhatsApp para coordinar el día, horario y pasarte la dirección exacta del consultorio.",
   precioTexto: "$1.900 UYU",
   mercadoPagoLink: "https://mpago.la/1U58qCx",
 };

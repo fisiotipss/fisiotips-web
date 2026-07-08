@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { sucursales } from "@/content/site-copy";
 
 export const runtime = "nodejs";
 
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
       deporte: campoTexto(formData, "deporte"),
       ubicacion: campoTexto(formData, "ubicacion"),
       demandaFisica: campoTexto(formData, "demandaFisica"),
+      sucursal: campoTexto(formData, "sucursal"),
       motivoConsulta: campoTexto(formData, "motivoConsulta"),
       tratamientosPrevios: campoTexto(formData, "tratamientosPrevios"),
     };
@@ -32,6 +34,7 @@ export async function POST(req: NextRequest) {
       "deporte",
       "ubicacion",
       "demandaFisica",
+      "sucursal",
       "motivoConsulta",
     ];
     const faltante = camposObligatorios.find((campo) => !datos[campo]);
@@ -68,6 +71,10 @@ export async function POST(req: NextRequest) {
         ["Deporte", datos.deporte],
         ["Ciudad / país", datos.ubicacion],
         ["Nivel de esfuerzo físico laboral", datos.demandaFisica],
+        [
+          "Sucursal más conveniente",
+          sucursales.find((s) => s.value === datos.sucursal)?.label || datos.sucursal,
+        ],
         ["Motivo de consulta", datos.motivoConsulta],
         ["Tratamientos previos y resultados", datos.tratamientosPrevios || "—"],
       ];
