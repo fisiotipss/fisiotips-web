@@ -10,6 +10,10 @@ const links = [
   { href: "#consulta", label: "Reservar evaluación" },
 ];
 
+const adminLinks = [
+  { href: "/panel-pagos", label: "Acceso usuario", className: "text-xs bg-[#2563eb] text-white px-3 py-1.5 rounded hover:opacity-90" },
+];
+
 export default function Nav() {
   return (
     <header className="sticky top-0 z-40 border-b border-black/5 bg-white/90 backdrop-blur">
@@ -38,7 +42,10 @@ export default function Nav() {
           ))}
         </nav>
 
-        <div className="hidden sm:block">
+        <div className="hidden sm:flex items-center gap-3">
+          <a href="/panel-pagos" className="text-xs text-gray-900 hover:text-gray-600 font-medium">
+            Acceso usuario
+          </a>
           <WhatsAppButton texto="WhatsApp" />
         </div>
       </div>
