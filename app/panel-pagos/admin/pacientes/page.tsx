@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { pacientesSeed } from "@/lib/seed-pacientes";
 
 interface AuthData {
   role: string;
@@ -13,47 +14,25 @@ interface Paciente {
   nombre: string;
   apellido: string;
   lesion: string;
-  sesionesCompradas: number;
+  sesionesCompradas: number | string;
+  sesionesDisponibles: number | string;
   creado: string;
 }
 
 export default function GestionarPacientes() {
   const router = useRouter();
   const [auth, setAuth] = useState<AuthData | null>(null);
-  const [pacientes, setPacientes] = useState<Paciente[]>([
-    {
-      id: "1",
-      nombre: "Juan",
-      apellido: "García",
-      lesion: "Codo - Tendinitis",
-      sesionesCompradas: 10,
-      creado: "2026-07-01",
-    },
-    {
-      id: "2",
-      nombre: "Ivonne",
-      apellido: "López",
-      lesion: "Rodilla - Condromalacia",
-      sesionesCompradas: 6,
-      creado: "2026-07-01",
-    },
-    {
-      id: "3",
-      nombre: "Ariel",
-      apellido: "Sánchez",
-      lesion: "Espalda - Lumbalgia",
-      sesionesCompradas: 15,
-      creado: "2026-07-02",
-    },
-    {
-      id: "4",
-      nombre: "María",
-      apellido: "Ruiz",
-      lesion: "Cadera - Tendinopatía",
-      sesionesCompradas: 8,
-      creado: "2026-07-02",
-    },
-  ]);
+  const [pacientes, setPacientes] = useState<Paciente[]>(() => {
+    return pacientesSeed.map((p, idx) => ({
+      id: (idx + 1).toString(),
+      nombre: p.nombre,
+      apellido: p.apellido,
+      lesion: p.lesion,
+      sesionesCompradas: p.compradas,
+      sesionesDisponibles: p.disponibles,
+      creado: new Date().toISOString().split("T")[0],
+    }));
+  });
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [lesion, setLesion] = useState("");
@@ -211,14 +190,14 @@ export default function GestionarPacientes() {
                   </p>
                   <p className="text-sm text-gray-600">{paciente.lesion}</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {paciente.sesionesCompradas} sesiones • Creado: {paciente.creado}
+                    Compradas: {paciente.sesionesCompradas} | Disponibles: {paciente.sesionesDisponibles}
                   </p>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-[#2563eb]">
-                    {paciente.sesionesCompradas}
+                    {paciente.sesionesDisponibles}
                   </div>
-                  <p className="text-xs text-gray-500">sesiones</p>
+                  <p className="text-xs text-gray-500">disponibles</p>
                 </div>
               </div>
             ))}
