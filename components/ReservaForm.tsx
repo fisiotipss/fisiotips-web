@@ -10,6 +10,12 @@ const demandaFisicaOpciones = [
   { value: "intenso", label: "Trabajo con esfuerzo físico intenso / carga" },
 ];
 
+const preferenciaHorariaOpciones = [
+  { value: "manana", label: "De mañana" },
+  { value: "tarde", label: "De tarde" },
+  { value: "ambas", label: "Ambas opciones" },
+];
+
 type Estado = "idle" | "enviando" | "error";
 
 export default function ReservaForm() {
@@ -123,6 +129,27 @@ export default function ReservaForm() {
             <p className="mt-1 text-xs text-gray-400">
               La dirección exacta te la pasamos por WhatsApp una vez confirmado el pago.
             </p>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Preferencia horaria para la evaluación
+            </label>
+            <select
+              name="preferenciaHoraria"
+              required
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-celeste focus:outline-none focus:ring-1 focus:ring-celeste"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Seleccioná una opción
+              </option>
+              {preferenciaHorariaOpciones.map((op) => (
+                <option key={op.value} value={op.value}>
+                  {op.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
