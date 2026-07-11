@@ -57,7 +57,7 @@ export default function PacientesAtendidos() {
     if (auth) {
       cargarRegistros();
     }
-  }, [mes, filtroUsuario]);
+  }, [mes, filtroUsuario, auth]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -67,7 +67,7 @@ export default function PacientesAtendidos() {
       }
     }, 2000);
     return () => clearInterval(interval);
-  }, [auth, mes, filtroUsuario]);
+  }, [auth]);
 
   const cargarUsuarios = async () => {
     try {
