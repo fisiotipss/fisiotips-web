@@ -4,6 +4,26 @@ import { MercadoPagoConfig, Payment } from "mercadopago";
 
 export const runtime = "nodejs";
 
+const processedPayments = new Map<string, number>();
+
+function isPaymentAlreadyProcessed(paymentId: string): boolean {
+  const now = Date.now();
+  const lastProcessed = processedPayments.get(paymentId);
+
+  if (lastProcessed && now - lastProcessed < 300000) {
+    return true;
+  }
+
+  processedPayments.set(paymentId, now);
+
+  if (processedPayments.size > 500) {
+    const oldestKey = processedPayments.keys().next().value;
+    processedPayments.delete(oldestKey);
+  }
+
+  return false;
+}
+
 // Mercado Pago llama a esta URL cada vez que cambia el estado de un pago en tu cuenta
 // (configurado en tu panel de Mercado Pago > Notificaciones > Webhooks).
 // Documentación: https://www.mercadopago.com.uy/developers/es/docs/checkout-pro/additional-content/notifications/webhooks
@@ -17,6 +37,10 @@ export async function POST(req: NextRequest) {
     const tipo = body?.type || searchParams.get("type") || searchParams.get("topic");
 
     if (tipo !== "payment" || !paymentId || !process.env.MP_ACCESS_TOKEN) {
+      return NextResponse.json({ ok: true });
+    }
+
+    if (isPaymentAlreadyProcessed(paymentId)) {
       return NextResponse.json({ ok: true });
     }
 

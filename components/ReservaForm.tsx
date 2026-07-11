@@ -16,7 +16,7 @@ const preferenciaHorariaOpciones = [
   { value: "ambas", label: "Ambas opciones" },
 ];
 
-type Estado = "idle" | "enviando" | "error";
+type Estado = "idle" | "enviando" | "error" | "redirigiendo";
 
 export default function ReservaForm() {
   const [estado, setEstado] = useState<Estado>("idle");
@@ -24,10 +24,18 @@ export default function ReservaForm() {
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (estado !== "idle") {
+      return;
+    }
+
     setEstado("enviando");
     setErrorMsg("");
 
     const formData = new FormData(e.currentTarget);
+
+    const deduplicationId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    formData.append("deduplication_id", deduplicationId);
 
     try {
       const res = await fetch("/api/consulta", {
@@ -40,7 +48,10 @@ export default function ReservaForm() {
         throw new Error(data.error || "No se pudo enviar el formulario.");
       }
 
-      window.location.href = consulta.mercadoPagoLink;
+      setEstado("redirigiendo");
+      setTimeout(() => {
+        window.location.href = consulta.mercadoPagoLink;
+      }, 300);
     } catch (err) {
       setEstado("error");
       setErrorMsg(err instanceof Error ? err.message : "Ocurrió un error inesperado.");
@@ -178,10 +189,10 @@ export default function ReservaForm() {
 
         <button
           type="submit"
-          disabled={estado === "enviando"}
+          disabled={estado !== "idle"}
           className="w-full rounded-full bg-celeste px-6 py-3 text-sm font-semibold text-white transition-colors hover:brightness-90 disabled:opacity-60"
         >
-          {estado === "enviando" ? "Enviando..." : `Enviar y pagar ${consulta.precioTexto} con Mercado Pago`}
+          {estado === "enviando" ? "Enviando..." : estado === "redirigiendo" ? "Redirigiendo a Mercado Pago..." : `Enviar y pagar ${consulta.precioTexto} con Mercado Pago`}
         </button>
       </form>
     </section>

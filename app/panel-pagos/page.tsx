@@ -46,6 +46,13 @@ export default function PanelLogin() {
 
   return (
     <div className="flex items-center justify-center min-h-screen px-4">
+      <a
+        href="https://fisiotips.com"
+        className="absolute top-4 left-4 text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1 transition-colors"
+      >
+        ← Volver a Fisiotips
+      </a>
+
       <div className="w-full max-w-[400px]">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-10">
           <div className="text-center mb-8">

@@ -6,6 +6,26 @@ export const runtime = "nodejs";
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8 MB
 
+const processedRequests = new Map<string, number>();
+
+function deduplicateRequest(deduplicationId: string): boolean {
+  const now = Date.now();
+  const lastProcessed = processedRequests.get(deduplicationId);
+
+  if (lastProcessed && now - lastProcessed < 60000) {
+    return false;
+  }
+
+  processedRequests.set(deduplicationId, now);
+
+  if (processedRequests.size > 1000) {
+    const oldestKey = processedRequests.keys().next().value;
+    processedRequests.delete(oldestKey);
+  }
+
+  return true;
+}
+
 function campoTexto(formData: FormData, nombre: string) {
   const valor = formData.get(nombre);
   return typeof valor === "string" ? valor.trim() : "";
@@ -14,6 +34,14 @@ function campoTexto(formData: FormData, nombre: string) {
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
+
+    const deduplicationId = formData.get("deduplication_id");
+    if (typeof deduplicationId === "string" && !deduplicateRequest(deduplicationId)) {
+      return NextResponse.json(
+        { error: "Solicitud duplicada detectada. Aguardá un momento e intentá nuevamente." },
+        { status: 429 }
+      );
+    }
 
     const datos = {
       nombre: campoTexto(formData, "nombre"),
