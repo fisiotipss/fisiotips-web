@@ -93,10 +93,27 @@ export default function PacientesAtendidos() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#0f5c4d] mb-2">Filtrar por usuario ({usuarios.length})</label>
-              <select value={filtroUsuario} onChange={(e) => setFiltroUsuario(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
-                <option value="">Todos</option>
-                {usuarios.map(u => <option key={u.email} value={u.email}>{u.nombre}</option>)}
-              </select>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setFiltroUsuario("")}
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    filtroUsuario === "" ? "bg-[#0f5c4d] text-white" : "bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  Todos
+                </button>
+                {usuarios.map((u) => (
+                  <button
+                    key={u.email}
+                    onClick={() => setFiltroUsuario(u.email)}
+                    className={`px-3 py-2 rounded-md text-sm font-medium ${
+                      filtroUsuario === u.email ? "bg-[#0f5c4d] text-white" : "bg-gray-200 text-gray-700"
+                    }`}
+                  >
+                    {u.nombre}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
