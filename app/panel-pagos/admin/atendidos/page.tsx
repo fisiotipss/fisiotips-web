@@ -23,10 +23,17 @@ interface AuthData {
   name: string;
 }
 
+interface Usuario {
+  email: string;
+  nombre: string;
+  rol: string;
+}
+
 export default function PacientesAtendidos() {
   const router = useRouter();
   const [auth, setAuth] = useState<AuthData | null>(null);
   const [registros, setRegistros] = useState<Registro[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [mes, setMes] = useState(new Date().toISOString().slice(0, 7));
   const [loading, setLoading] = useState(false);
   const [filtroUsuario, setFiltroUsuario] = useState("");
@@ -41,6 +48,7 @@ export default function PacientesAtendidos() {
         router.push("/panel-pagos");
       } else {
         setAuth(authData);
+        cargarUsuarios();
       }
     }
   }, [router]);
@@ -53,17 +61,36 @@ export default function PacientesAtendidos() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (auth) cargarRegistros();
+      if (auth) {
+        cargarUsuarios();
+        cargarRegistros();
+      }
     }, 2000);
     return () => clearInterval(interval);
   }, [auth, mes, filtroUsuario]);
 
+  const cargarUsuarios = async () => {
+    try {
+      const res = await fetch("/api/panel-pagos/usuarios");
+      if (res.ok) {
+        const { data } = await res.json();
+        // Filtrar solo fisios y socios (no admin)
+        const usuariosActivos = (data || []).filter(
+          (u: Usuario) => u.rol !== "admin"
+        );
+        setUsuarios(usuariosActivos);
+      }
+    } catch (error) {
+      console.error("Error cargando usuarios:", error);
+    }
+  };
+
   const cargarRegistros = async () => {
     setLoading(true);
     try {
-      let url = `/api/panel-pagos/registros?mes=${mes}`;
+      let url = `/api/panel-pagos/registros?mes=${mes}&allUsers=true`;
       if (filtroUsuario) {
-        url += `&email=${filtroUsuario}`;
+        url = `/api/panel-pagos/registros?mes=${mes}&email=${filtroUsuario}`;
       }
 
       const res = await fetch(url);
@@ -84,8 +111,6 @@ export default function PacientesAtendidos() {
   };
 
   if (!auth || auth.role !== "admin") return null;
-
-  const usuariosUnicos = [...new Set(registros.map((r) => r.email))];
 
   const mesesDisponibles = [
     "2026-06",
@@ -171,9 +196,9 @@ export default function PacientesAtendidos() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
               >
                 <option value="">Todos</option>
-                {usuariosUnicos.map((usuario) => (
-                  <option key={usuario} value={usuario}>
-                    {usuario}
+                {usuarios.map((usuario) => (
+                  <option key={usuario.email} value={usuario.email}>
+                    {usuario.nombre} ({usuario.email})
                   </option>
                 ))}
               </select>
