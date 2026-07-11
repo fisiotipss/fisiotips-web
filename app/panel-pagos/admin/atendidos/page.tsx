@@ -7,7 +7,11 @@ import Link from "next/link";
 export default function PacientesAtendidos() {
   const router = useRouter();
   const [auth, setAuth] = useState(null);
-  const [usuarios, setUsuarios] = useState([]);
+  const [usuarios, setUsuarios] = useState([
+    { email: "martuvz@gmail.com", nombre: "Martina", rol: "Fisio" },
+    { email: "fisioigalvilla@gmail.com", nombre: "Igal Villa", rol: "Socio" },
+    { email: "manu.lara.01@gmail.com", nombre: "Manuela", rol: "Fisio" },
+  ]);
   const [mes, setMes] = useState("2026-06");
   const [filtroUsuario, setFiltroUsuario] = useState("");
   const [registros, setRegistros] = useState([]);
