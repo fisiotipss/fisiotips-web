@@ -99,10 +99,9 @@ export default function PacientesAtendidos() {
 
   // Al montar: cargar usuarios
   useEffect(() => {
-    if (auth) {
-      cargarUsuarios();
-    }
-  }, [auth]);
+    console.log("useEffect[auth] ejecutado. auth:", auth);
+    cargarUsuarios();
+  }, []);
 
   // Cuando cambia mes o filtro: cargar registros
   useEffect(() => {
