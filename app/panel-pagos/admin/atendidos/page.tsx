@@ -4,18 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-const USUARIOS_HARDCODED = [
-  { email: "martuvz@gmail.com", nombre: "Martina", rol: "Fisio" },
-  { email: "fisioigalvilla@gmail.com", nombre: "Igal Villa", rol: "Socio" },
-  { email: "manu.lara.01@gmail.com", nombre: "Manuela", rol: "Fisio" },
-];
-
 export default function PacientesAtendidos() {
   const router = useRouter();
   const [auth, setAuth] = useState(null);
-  const [usuarios, setUsuarios] = useState(USUARIOS_HARDCODED);
+  const [usuarios, setUsuarios] = useState([]);
   const [mes, setMes] = useState("2026-06");
-  const [filtroUsuario, setFiltroUsuario] = useState("");
+  const [filtro, setFiltro] = useState("");
   const [registros, setRegistros] = useState([]);
 
   useEffect(() => {
@@ -24,43 +18,40 @@ export default function PacientesAtendidos() {
       router.push("/panel-pagos");
       return;
     }
-    const authData = JSON.parse(data);
-    if (authData.role !== "admin") {
+    const auth = JSON.parse(data);
+    if (auth.role !== "admin") {
       router.push("/panel-pagos");
       return;
     }
-    setAuth(authData);
+    setAuth(auth);
   }, [router]);
 
   useEffect(() => {
     if (!auth) return;
-    fetch("/api/panel-pagos/usuarios")
-      .then(r => r.json())
-      .then(d => {
-        const noAdmin = (d.data || []).filter(u => u.rol !== "admin");
-        setUsuarios(noAdmin);
-      });
+    fetch("/api/panel-pagos/usuarios").then(r => r.json()).then(d => {
+      setUsuarios((d.data || []).filter(u => u.rol !== "admin"));
+    });
   }, [auth]);
 
   useEffect(() => {
     if (!auth) return;
     let url = `/api/panel-pagos/registros?mes=${mes}`;
-    if (filtroUsuario) url += `&email=${filtroUsuario}`;
+    if (filtro) url += `&email=${filtro}`;
     fetch(url).then(r => r.json()).then(d => setRegistros(d.data || []));
-  }, [mes, filtroUsuario, auth]);
+  }, [mes, filtro, auth]);
 
   useEffect(() => {
     if (!auth) return;
-    const interval = setInterval(() => {
-      fetch("/api/panel-pagos/usuarios")
-        .then(r => r.json())
-        .then(d => setUsuarios((d.data || []).filter(u => u.rol !== "admin")));
+    const i = setInterval(() => {
+      fetch("/api/panel-pagos/usuarios").then(r => r.json()).then(d => {
+        setUsuarios((d.data || []).filter(u => u.rol !== "admin"));
+      });
       let url = `/api/panel-pagos/registros?mes=${mes}`;
-      if (filtroUsuario) url += `&email=${filtroUsuario}`;
+      if (filtro) url += `&email=${filtro}`;
       fetch(url).then(r => r.json()).then(d => setRegistros(d.data || []));
     }, 2000);
-    return () => clearInterval(interval);
-  }, [auth, mes, filtroUsuario]);
+    return () => clearInterval(i);
+  }, [auth, mes, filtro]);
 
   if (!auth) return null;
 
@@ -73,76 +64,59 @@ export default function PacientesAtendidos() {
             <p className="text-sm text-gray-600">Pacientes atendidos</p>
           </div>
           <div className="flex gap-3">
-            <Link href="/panel-pagos/admin" className="text-sm text-gray-600 hover:text-gray-900">
-              ← Atrás
-            </Link>
-            <button onClick={() => { localStorage.removeItem("panelAuth"); router.push("/panel-pagos"); }} className="text-sm text-gray-600 hover:text-gray-900">
-              Cerrar
-            </button>
+            <Link href="/panel-pagos/admin" className="text-sm text-gray-600">← Atrás</Link>
+            <button onClick={() => { localStorage.removeItem("panelAuth"); router.push("/panel-pagos"); }} className="text-sm text-gray-600">Cerrar</button>
           </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
-        <div className="bg-red-100 border border-red-300 p-4 mb-4 rounded text-red-700">
-          <p>DEBUG: Total usuarios = {usuarios.length}</p>
-          {usuarios.map((u, i) => (
-            <p key={i}>{i}: {u.nombre} ({u.email})</p>
-          ))}
-        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-[#0f5c4d] mb-2">Mes</label>
+            <select value={mes} onChange={e => setMes(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md">
+              <option value="2026-06">junio 2026</option>
+              <option value="2026-07">julio 2026</option>
+            </select>
+          </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-[#0f5c4d] mb-2">Mes</label>
-              <select value={mes} onChange={(e) => setMes(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
-                <option value="2026-06">junio de 2026</option>
-                <option value="2026-07">julio de 2026</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#0f5c4d] mb-2">Filtrar por usuario ({usuarios.length})</label>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setFiltroUsuario("")}
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    filtroUsuario === "" ? "bg-[#0f5c4d] text-white" : "bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  Todos
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-[#0f5c4d] mb-2">Usuarios: {usuarios.length}</label>
+            <div className="flex flex-wrap gap-2 p-3 border border-gray-300 rounded-md bg-gray-50">
+              <button onClick={() => setFiltro("")} className={`px-3 py-1 rounded text-sm ${filtro === "" ? "bg-[#0f5c4d] text-white" : "bg-gray-300"}`}>Todos</button>
+              {usuarios.map(u => (
+                <button key={u.email} onClick={() => setFiltro(u.email)} className={`px-3 py-1 rounded text-sm ${filtro === u.email ? "bg-[#0f5c4d] text-white" : "bg-gray-300"}`}>
+                  {u.nombre}
                 </button>
-                {usuarios.map((u) => (
-                  <button
-                    key={u.email}
-                    onClick={() => setFiltroUsuario(u.email)}
-                    className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      filtroUsuario === u.email ? "bg-[#0f5c4d] text-white" : "bg-gray-200 text-gray-700"
-                    }`}
-                  >
-                    {u.nombre}
-                  </button>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
 
           {registros.length === 0 ? (
             <p className="text-center text-gray-600 py-8">No hay registros</p>
           ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr><th className="px-4 py-3 text-left text-[#0f5c4d]">Fecha</th><th className="px-4 py-3 text-left text-[#0f5c4d]">Paciente</th><th className="px-4 py-3 text-left text-[#0f5c4d]">Usuario</th></tr>
-              </thead>
-              <tbody>
-                {registros.map(r => (
-                  <tr key={r.id} className="border-b">
-                    <td className="px-4 py-3">{r.fecha}</td>
-                    <td className="px-4 py-3">{r.paciente}</td>
-                    <td className="px-4 py-3">{r.email}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-[#0f5c4d]">Fecha</th>
+                    <th className="px-4 py-3 text-left text-[#0f5c4d]">Paciente</th>
+                    <th className="px-4 py-3 text-left text-[#0f5c4d]">Usuario</th>
+                    <th className="px-4 py-3 text-left text-[#0f5c4d]">Tipo</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {registros.map(r => (
+                    <tr key={r.id} className="border-b">
+                      <td className="px-4 py-3">{r.fecha}</td>
+                      <td className="px-4 py-3">{r.paciente}</td>
+                      <td className="px-4 py-3 text-xs bg-blue-50 rounded px-2 py-1">{r.email}</td>
+                      <td className="px-4 py-3 text-xs bg-gray-100 rounded px-2">{r.tipo === "clinica" ? "Clínica" : "Domicilio"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
           <p className="mt-4 text-sm text-gray-600">Total: {registros.length}</p>
         </div>
