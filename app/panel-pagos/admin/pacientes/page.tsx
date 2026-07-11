@@ -23,6 +23,7 @@ interface Paciente {
 export default function GestionarPacientes() {
   const router = useRouter();
   const [auth, setAuth] = useState<AuthData | null>(null);
+  // Force redeploy
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
