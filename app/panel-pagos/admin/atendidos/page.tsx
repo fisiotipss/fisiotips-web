@@ -76,9 +76,12 @@ export default function PacientesAtendidos() {
         const { data } = await res.json();
         // Filtrar solo fisios y socios (no admin)
         const usuariosActivos = (data || []).filter(
-          (u: Usuario) => u.rol !== "admin"
+          (u: any) => u.rol && u.rol.toLowerCase() !== "admin"
         );
         setUsuarios(usuariosActivos);
+        console.log("Usuarios cargados:", usuariosActivos);
+      } else {
+        console.error("Error en respuesta:", res.status);
       }
     } catch (error) {
       console.error("Error cargando usuarios:", error);
