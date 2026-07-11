@@ -55,12 +55,21 @@ export default function PacientesAtendidos() {
 
   // Cargar usuarios
   const cargarUsuarios = async () => {
+    console.log("Iniciando cargarUsuarios...");
     try {
       const res = await fetch("/api/panel-pagos/usuarios");
+      console.log("Respuesta status:", res.status);
       if (res.ok) {
-        const { data } = await res.json();
-        const noAdmin = (data || []).filter((u: any) => u.rol !== "admin");
+        const json = await res.json();
+        console.log("JSON completo:", json);
+        const data = json.data || [];
+        console.log("Data array:", data);
+        const noAdmin = data.filter((u: any) => u.rol !== "admin");
+        console.log("Después de filtrar (no admin):", noAdmin);
         setUsuarios(noAdmin);
+        console.log("setUsuarios llamado con:", noAdmin.length, "usuarios");
+      } else {
+        console.error("Respuesta NO ok:", res.status);
       }
     } catch (error) {
       console.error("Error usuarios:", error);
