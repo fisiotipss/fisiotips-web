@@ -19,8 +19,8 @@ function deduplicateRequest(deduplicationId: string): boolean {
   processedRequests.set(deduplicationId, now);
 
   if (processedRequests.size > 1000) {
-    const oldestKey = processedRequests.keys().next().value;
-    processedRequests.delete(oldestKey);
+    const oldestKey = processedRequests.keys().next().value as string;
+    if (oldestKey) processedRequests.delete(oldestKey);
   }
 
   return true;

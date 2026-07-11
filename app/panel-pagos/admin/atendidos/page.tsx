@@ -7,10 +7,10 @@ import Link from "next/link";
 export default function PacientesAtendidos() {
   const router = useRouter();
   const [auth, setAuth] = useState(null);
-  const [usuarios, setUsuarios] = useState([]);
+  const [usuarios, setUsuarios] = useState<any[]>([]);
   const [mes, setMes] = useState("2026-06");
   const [filtro, setFiltro] = useState("");
-  const [registros, setRegistros] = useState([]);
+  const [registros, setRegistros] = useState<any[]>([]);
 
   useEffect(() => {
     const data = localStorage.getItem("panelAuth");
@@ -29,7 +29,7 @@ export default function PacientesAtendidos() {
   useEffect(() => {
     if (!auth) return;
     fetch("/api/panel-pagos/usuarios").then(r => r.json()).then(d => {
-      setUsuarios((d.data || []).filter(u => u.rol !== "admin"));
+      setUsuarios((d.data || []).filter((u: any) => u.rol !== "admin"));
     });
   }, [auth]);
 
@@ -44,7 +44,7 @@ export default function PacientesAtendidos() {
     if (!auth) return;
     const i = setInterval(() => {
       fetch("/api/panel-pagos/usuarios").then(r => r.json()).then(d => {
-        setUsuarios((d.data || []).filter(u => u.rol !== "admin"));
+        setUsuarios((d.data || []).filter((u: any) => u.rol !== "admin"));
       });
       let url = `/api/panel-pagos/registros?mes=${mes}`;
       if (filtro) url += `&email=${filtro}`;

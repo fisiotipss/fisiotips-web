@@ -17,8 +17,8 @@ function isPaymentAlreadyProcessed(paymentId: string): boolean {
   processedPayments.set(paymentId, now);
 
   if (processedPayments.size > 500) {
-    const oldestKey = processedPayments.keys().next().value;
-    processedPayments.delete(oldestKey);
+    const oldestKey = processedPayments.keys().next().value as string;
+    if (oldestKey) processedPayments.delete(oldestKey);
   }
 
   return false;
