@@ -6,6 +6,7 @@ import LogoMark from "@/components/LogoMark";
 
 export default function PanelLogin() {
   const router = useRouter();
+  // Force Vercel redeploy - v2
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
