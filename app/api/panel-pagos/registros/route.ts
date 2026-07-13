@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+
+const supabase = supabaseUrl && supabaseKey
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +20,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validar que si es clínica, tenga horarios
     if (tipo === "clinica" && (!horaDesde || !horaHasta)) {
       return NextResponse.json(
         { error: "Horarios requeridos para clínica" },
@@ -21,7 +27,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Normalizar tipo
     const tipoNormalizado =
       tipo === "clinica"
         ? "clinica"
@@ -31,35 +36,106 @@ export async function POST(request: NextRequest) {
 
     const registro = {
       email,
+      fecha: new Date().toISOString().split("T")[0],
       paciente,
       tipo: tipoNormalizado,
-      horaDesde: tipo === "clinica" ? horaDesde : null,
-      horaHasta: tipo === "clinica" ? horaHasta : null,
+      hora_desde: tipo === "clinica" ? horaDesde : null,
+      hora_hasta: tipo === "clinica" ? horaHasta : null,
       observaciones,
-      fecha: new Date().toISOString().split("T")[0],
     };
 
-    // Intentar guardar en Supabase si está configurado
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      try {
-        // TODO: Aquí iría la lógica real de Supabase
-        // const { data, error } = await supabase
-        //   .from("registros")
-        //   .insert([registro]);
-      } catch (dbError) {
-        console.log("BD no configurada, usando datos en memoria");
-      }
+    if (!supabase) {
+      return NextResponse.json(
+        { error: "Base de datos no configurada" },
+        { status: 500 }
+      );
     }
+
+    const { data: regData, error: regError } = await supabase
+      .from("registros")
+      .insert([registro])
+      .select();
+
+    if (regError) {
+      console.error("Error al insertar registro:", regError);
+      return NextResponse.json(
+        { error: "Error al registrar paciente" },
+        { status: 500 }
+      );
+    }
+
+    const { data: pacientes, error: pacError } = await supabase
+      .from("pacientes")
+      .select("sesiones_disponibles")
+      .eq("nombre", paciente.split(" ")[0])
+      .limit(1);
+
+    if (pacError || !pacientes || pacientes.length === 0) {
+      return NextResponse.json({
+        success: true,
+        mensaje: "Paciente registrado correctamente",
+        registro: regData?.[0],
+      });
+    }
+
+    const sesionesDisponibles = Math.max(
+      0,
+      (pacientes[0].sesiones_disponibles || 1) - 1
+    );
+
+    await supabase
+      .from("pacientes")
+      .update({ sesiones_disponibles: sesionesDisponibles })
+      .eq("nombre", paciente.split(" ")[0]);
 
     return NextResponse.json({
       success: true,
       mensaje: "Paciente registrado correctamente",
-      registro,
+      registro: regData?.[0],
     });
   } catch (error) {
+    console.error("Error:", error);
     return NextResponse.json(
       { error: "Error al registrar paciente" },
       { status: 500 }
     );
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    if (!supabase) {
+      return NextResponse.json({ data: [] });
+    }
+
+    const email = request.nextUrl.searchParams.get("email");
+    const mes = request.nextUrl.searchParams.get("mes");
+    const allUsers = request.nextUrl.searchParams.get("allUsers");
+
+    let query = supabase.from("registros").select("*");
+
+    if (email) {
+      query = query.eq("email", email);
+    }
+
+    if (mes) {
+      query = query.ilike("fecha", `${mes}%`);
+    }
+
+    if (!allUsers) {
+      query = query.order("fecha", { ascending: false });
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error Supabase:", error);
+      return NextResponse.json({ data: [] });
+    }
+
+    return NextResponse.json({ data });
+  } catch (error) {
+    console.error("Error:", error);
+    return NextResponse.json({ data: [] });
   }
 }

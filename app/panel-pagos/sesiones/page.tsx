@@ -28,6 +28,14 @@ export default function SesionesPage() {
     }
   }, [email, mes]);
 
+  useEffect(() => {
+    if (!email) return;
+    const interval = setInterval(() => {
+      cargarSesiones();
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [email, mes]);
+
   const cargarSesiones = async () => {
     try {
       const res = await fetch(
