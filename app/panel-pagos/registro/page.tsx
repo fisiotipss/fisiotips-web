@@ -10,9 +10,17 @@ interface AuthData {
   name: string;
 }
 
+interface Paciente {
+  id: string;
+  nombre: string;
+  apellido: string;
+  lesion: string;
+}
+
 export default function RegistroDiario() {
   const router = useRouter();
   const [auth, setAuth] = useState<AuthData | null>(null);
+  const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0]);
   const [paciente, setPaciente] = useState("");
   const [tipo, setTipo] = useState("clinica");
@@ -28,8 +36,19 @@ export default function RegistroDiario() {
       router.push("/panel-pagos");
     } else {
       setAuth(JSON.parse(data));
+      cargarPacientes();
     }
   }, [router]);
+
+  const cargarPacientes = async () => {
+    try {
+      const res = await fetch("/api/panel-pagos/pacientes");
+      const data = await res.json();
+      setPacientes(data.data || []);
+    } catch (error) {
+      console.error("Error al cargar pacientes:", error);
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,18 +89,32 @@ export default function RegistroDiario() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#eef4f6] to-white">
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
+        <div className="max-w-6xl mx-auto flex justify-between items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-[#0f5c4d]">ReActive</h1>
             <p className="text-sm text-gray-600">Registrar sesiones</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="text-sm text-gray-600 hover:text-gray-900"
-          >
-            Cerrar sesión
-          </button>
+          <div className="flex gap-2 sm:gap-3 items-center">
+            <button
+              onClick={() => router.push(`/panel-pagos/perfil?email=${auth?.email}`)}
+              className="text-sm px-3 py-2 text-[#0f5c4d] hover:bg-gray-100 rounded-md transition"
+            >
+              ⚙️ Editar perfil
+            </button>
+            <button
+              onClick={() => router.push(`/panel-pagos/sesiones?email=${auth?.email}`)}
+              className="text-sm px-3 py-2 text-[#0f5c4d] hover:bg-gray-100 rounded-md transition"
+            >
+              📅 Ver sesiones
+            </button>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Cerrar
+            </button>
+          </div>
         </div>
       </header>
 
@@ -130,10 +163,11 @@ export default function RegistroDiario() {
                 required
               >
                 <option value="">Seleccionar paciente...</option>
-                <option value="Juan García">Juan García - Codo</option>
-                <option value="Ivonne López">Ivonne López - Rodilla</option>
-                <option value="Ariel Sánchez">Ariel Sánchez - Espalda</option>
-                <option value="María Ruiz">María Ruiz - Cadera</option>
+                {pacientes.map((p) => (
+                  <option key={p.id} value={`${p.nombre} ${p.apellido}`}>
+                    {p.nombre} {p.apellido} - {p.lesion}
+                  </option>
+                ))}
               </select>
             </div>
 

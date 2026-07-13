@@ -1,264 +1,221 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 
-interface AuthData {
+interface UsuarioData {
   email: string;
-  role: string;
-  name: string;
+  nombre: string;
   telefono?: string;
   banco?: string;
-  nroCuenta?: string;
+  nro_cuenta?: string;
   sucursal?: string;
 }
 
-export default function Perfil() {
+export default function PerfilPage() {
   const router = useRouter();
-  const [auth, setAuth] = useState<AuthData | null>(null);
-  const [editando, setEditando] = useState(false);
-  const [formData, setFormData] = useState<Partial<AuthData>>({});
-  const [success, setSuccess] = useState("");
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email") || "";
+
+  const [usuario, setUsuario] = useState<UsuarioData>({
+    email: "",
+    nombre: "",
+    telefono: "",
+    banco: "",
+    nro_cuenta: "",
+    sucursal: "",
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    const data = localStorage.getItem("panelAuth");
-    if (!data) {
-      router.push("/panel-pagos");
-    } else {
-      const parsed = JSON.parse(data);
-      setAuth(parsed);
-      setFormData(parsed);
+    if (email) {
+      cargarUsuario();
     }
-  }, [router]);
+  }, [email]);
 
-  const handleSave = () => {
-    if (!auth) return;
-    const updated = { ...auth, ...formData };
-    localStorage.setItem("panelAuth", JSON.stringify(updated));
-    setAuth(updated);
-    setEditando(false);
-    setSuccess("Perfil actualizado correctamente");
-    setTimeout(() => setSuccess(""), 3000);
+  const cargarUsuario = async () => {
+    try {
+      const res = await fetch(`/api/panel-pagos/usuarios?email=${email}`);
+      const data = await res.json();
+      if (data.data && data.data.length > 0) {
+        setUsuario(data.data[0]);
+      }
+    } catch (error) {
+      console.error("Error cargando usuario:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("panelAuth");
-    router.push("/panel-pagos");
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+
+    try {
+      const res = await fetch("/api/panel-pagos/usuarios", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(usuario),
+      });
+
+      if (res.ok) {
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+      }
+    } catch (error) {
+      console.error("Error guardando:", error);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  if (!auth) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#eef4f6] to-white flex items-center justify-center">
+        <p className="text-gray-600">Cargando...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#eef4f6] to-white">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10">
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-[#0f5c4d]">Mi Perfil</h1>
-            <p className="text-sm text-gray-600">Información personal y datos bancarios</p>
+            <h1 className="text-2xl font-bold text-[#0f5c4d]">ReActive</h1>
+            <p className="text-sm text-gray-600">Editar perfil</p>
           </div>
-          <div className="flex gap-3">
-            <Link
-              href={auth.role === "admin" ? "/panel-pagos/admin" : "/panel-pagos/registro"}
-              className="text-sm text-gray-600 hover:text-gray-900"
-            >
-              ← Volver
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-gray-600 hover:text-gray-900"
-            >
-              Cerrar sesión
-            </button>
-          </div>
+          <button
+            onClick={() => router.back()}
+            className="text-sm text-gray-600 hover:text-gray-900"
+          >
+            ← Atrás
+          </button>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded">
-            ✓ {success}
-          </div>
-        )}
+      <div className="max-w-2xl mx-auto p-4 sm:p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6 sm:p-8">
+          <h2 className="text-xl font-bold text-[#0f5c4d] mb-6">
+            Datos personales
+          </h2>
 
-        {auth.role === "admin" ? (
-          <Link
-            href="/panel-pagos/admin/atendidos"
-            className="block bg-gradient-to-r from-[#0f5c4d] to-[#0d4a3f] text-white rounded-lg p-6 hover:shadow-lg transition"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-lg">📊 Pacientes Atendidos</h3>
-                <p className="text-sm opacity-90">Ver registro de sesiones por mes</p>
-              </div>
-              <span className="text-2xl">→</span>
+          {success && (
+            <div className="mb-6 bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded">
+              ✓ Perfil actualizado correctamente
             </div>
-          </Link>
-        ) : (
-          <Link
-            href="/panel-pagos/sesiones"
-            className="block bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] text-white rounded-lg p-6 hover:shadow-lg transition"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-lg">📋 Mis Sesiones</h3>
-                <p className="text-sm opacity-90">Ver tus sesiones registradas por mes</p>
-              </div>
-              <span className="text-2xl">→</span>
-            </div>
-          </Link>
-        )}
+          )}
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-bold text-[#0f5c4d]">Información Personal</h2>
-            <button
-              onClick={() => setEditando(!editando)}
-              className={`px-4 py-2 rounded-md font-medium text-sm ${
-                editando
-                  ? "bg-red-100 text-red-700 hover:bg-red-200"
-                  : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-              }`}
-            >
-              {editando ? "Cancelar" : "✏️ Editar"}
-            </button>
-          </div>
-
-          <div className="space-y-4">
+          <form onSubmit={handleSave} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-[#0f5c4d] mb-1">
-                Nombre
-              </label>
-              {editando ? (
-                <input
-                  type="text"
-                  value={formData.name || ""}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm"
-                />
-              ) : (
-                <p className="px-3 py-2.5 bg-gray-50 rounded-md text-sm text-gray-700">
-                  {auth.name}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[#0f5c4d] mb-1">
+              <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
                 Email
               </label>
-              {editando ? (
-                <input
-                  type="email"
-                  value={formData.email || ""}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm"
-                />
-              ) : (
-                <p className="px-3 py-2.5 bg-gray-50 rounded-md text-sm text-gray-700">
-                  {auth.email}
-                </p>
-              )}
+              <input
+                type="email"
+                value={usuario.email}
+                disabled
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-100 text-gray-600"
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#0f5c4d] mb-1">
+              <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
+                Nombre completo
+              </label>
+              <input
+                type="text"
+                value={usuario.nombre}
+                onChange={(e) =>
+                  setUsuario({ ...usuario, nombre: e.target.value })
+                }
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
                 Teléfono
               </label>
-              {editando ? (
-                <input
-                  type="tel"
-                  value={formData.telefono || ""}
-                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                  placeholder="+598 99 123 456"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm"
-                />
-              ) : (
-                <p className="px-3 py-2.5 bg-gray-50 rounded-md text-sm text-gray-700">
-                  {auth.telefono || "No agregado"}
-                </p>
-              )}
+              <input
+                type="tel"
+                value={usuario.telefono || ""}
+                onChange={(e) =>
+                  setUsuario({ ...usuario, telefono: e.target.value })
+                }
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+              />
             </div>
 
-            <hr className="my-6" />
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-bold text-[#0f5c4d] mb-4">
+                Datos bancarios
+              </h3>
 
-            <h3 className="text-md font-bold text-[#0f5c4d]">Datos Bancarios (Opcional)</h3>
-
-            <div>
-              <label className="block text-sm font-medium text-[#0f5c4d] mb-1">
-                Banco
-              </label>
-              {editando ? (
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
+                  Banco
+                </label>
                 <input
                   type="text"
-                  value={formData.banco || ""}
-                  onChange={(e) => setFormData({ ...formData, banco: e.target.value })}
-                  placeholder="Ej: BROU, Santander, Itaú"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm"
+                  value={usuario.banco || ""}
+                  onChange={(e) =>
+                    setUsuario({ ...usuario, banco: e.target.value })
+                  }
+                  placeholder="BROU, Itaú, Scotiabank, etc."
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
                 />
-              ) : (
-                <p className="px-3 py-2.5 bg-gray-50 rounded-md text-sm text-gray-700">
-                  {auth.banco || "No agregado"}
-                </p>
-              )}
-            </div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[#0f5c4d] mb-1">
-                Número de Cuenta
-              </label>
-              {editando ? (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
+                  Número de cuenta
+                </label>
                 <input
                   type="text"
-                  value={formData.nroCuenta || ""}
-                  onChange={(e) => setFormData({ ...formData, nroCuenta: e.target.value })}
-                  placeholder="12345678"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm"
+                  value={usuario.nro_cuenta || ""}
+                  onChange={(e) =>
+                    setUsuario({ ...usuario, nro_cuenta: e.target.value })
+                  }
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
                 />
-              ) : (
-                <p className="px-3 py-2.5 bg-gray-50 rounded-md text-sm text-gray-700">
-                  {auth.nroCuenta || "No agregado"}
-                </p>
-              )}
-            </div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[#0f5c4d] mb-1">
-                Sucursal
-              </label>
-              {editando ? (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
+                  Sucursal (opcional)
+                </label>
                 <input
                   type="text"
-                  value={formData.sucursal || ""}
-                  onChange={(e) => setFormData({ ...formData, sucursal: e.target.value })}
-                  placeholder="Ej: Centro, Pocitos"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm"
+                  value={usuario.sucursal || ""}
+                  onChange={(e) =>
+                    setUsuario({ ...usuario, sucursal: e.target.value })
+                  }
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
                 />
-              ) : (
-                <p className="px-3 py-2.5 bg-gray-50 rounded-md text-sm text-gray-700">
-                  {auth.sucursal || "No agregado"}
-                </p>
-              )}
+              </div>
             </div>
 
-            {editando && (
+            <div className="flex gap-3 pt-6">
               <button
-                onClick={handleSave}
-                className="w-full bg-[#0f5c4d] text-white font-medium py-2.5 rounded-md hover:opacity-90 mt-6"
+                type="submit"
+                disabled={saving}
+                className="flex-1 bg-[#2563eb] text-white font-medium py-2.5 rounded-md hover:opacity-90 disabled:opacity-50"
               >
-                ✓ Guardar cambios
+                {saving ? "Guardando..." : "Guardar cambios"}
               </button>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700">
-          <p className="font-medium mb-2">ℹ️ Información importante:</p>
-          <ul className="space-y-1 ml-4 list-disc">
-            <li>Tu contraseña solo puede ser cambiada por el administrador</li>
-            <li>Los datos bancarios son opcionales</li>
-            <li>El administrador puede ver y editar todos tus datos</li>
-          </ul>
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="flex-1 bg-gray-200 text-gray-700 font-medium py-2.5 rounded-md hover:bg-gray-300"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
