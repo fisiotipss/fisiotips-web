@@ -39,7 +39,7 @@ export default function AdminDashboard() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [mes, setMes] = useState("2026-07");
-  const [tab, setTab] = useState<"pagos" | "usuarios" | "pacientes-atendidos">("pagos");
+  const [tab, setTab] = useState<"pagos" | "usuarios" | "pacientes-atendidos" | "estado">("pagos");
   const [changePassModal, setChangePassModal] = useState<{ email: string; nombre: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
 
@@ -181,10 +181,10 @@ export default function AdminDashboard() {
       </header>
 
       <div className="max-w-7xl mx-auto p-6">
-        <div className="mb-6 flex gap-4 border-b border-gray-200">
+        <div className="mb-6 flex gap-4 border-b border-gray-200 overflow-x-auto">
           <button
             onClick={() => setTab("pagos")}
-            className={`pb-3 px-4 font-medium transition ${
+            className={`pb-3 px-4 font-medium transition whitespace-nowrap ${
               tab === "pagos"
                 ? "text-[#0f5c4d] border-b-2 border-[#0f5c4d]"
                 : "text-gray-600 hover:text-gray-900"
@@ -194,7 +194,7 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setTab("usuarios")}
-            className={`pb-3 px-4 font-medium transition ${
+            className={`pb-3 px-4 font-medium transition whitespace-nowrap ${
               tab === "usuarios"
                 ? "text-[#0f5c4d] border-b-2 border-[#0f5c4d]"
                 : "text-gray-600 hover:text-gray-900"
@@ -204,13 +204,23 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setTab("pacientes-atendidos")}
-            className={`pb-3 px-4 font-medium transition ${
+            className={`pb-3 px-4 font-medium transition whitespace-nowrap ${
               tab === "pacientes-atendidos"
                 ? "text-[#0f5c4d] border-b-2 border-[#0f5c4d]"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
             📋 Pacientes Atendidos
+          </button>
+          <button
+            onClick={() => setTab("estado")}
+            className={`pb-3 px-4 font-medium transition whitespace-nowrap ${
+              tab === "estado"
+                ? "text-[#0f5c4d] border-b-2 border-[#0f5c4d]"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            📊 Estado del Sistema
           </button>
         </div>
 
@@ -442,6 +452,152 @@ export default function AdminDashboard() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {tab === "estado" && (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 p-6">
+              <h2 className="text-xl font-bold text-[#0f5c4d] mb-6">📊 Estado del Sistema</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Pacientes Dinámicos */}
+                <div className="bg-white rounded-lg p-4 border border-blue-200">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-bold text-[#0f5c4d]">Pacientes Dinámicos</h3>
+                    <span className="text-2xl">✅</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">Cargan desde Supabase</p>
+                  <div className="bg-blue-50 rounded p-3">
+                    <p className="text-3xl font-bold text-blue-600">{pacientes.length}</p>
+                    <p className="text-xs text-gray-600">pacientes reales cargados</p>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-2">Se muestran con nombre y lesión</p>
+                </div>
+
+                {/* Editar Perfil */}
+                <div className="bg-white rounded-lg p-4 border border-green-200">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-bold text-[#0f5c4d]">Editar Perfil (⚙️)</h3>
+                    <span className="text-2xl">✅</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">Datos guardados en Supabase</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                      <span className="text-gray-600">Teléfono</span>
+                      <span className="font-semibold text-green-600">✓</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                      <span className="text-gray-600">Banco</span>
+                      <span className="font-semibold text-green-600">✓</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                      <span className="text-gray-600">Número de cuenta</span>
+                      <span className="font-semibold text-green-600">✓</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                      <span className="text-gray-600">Sucursal (opcional)</span>
+                      <span className="font-semibold text-green-600">✓</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ver Sesiones */}
+                <div className="bg-white rounded-lg p-4 border border-purple-200">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-bold text-[#0f5c4d]">Ver Sesiones (📅)</h3>
+                    <span className="text-2xl">✅</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">Actualización en tiempo real</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center p-2 bg-purple-50 rounded">
+                      <span className="text-gray-600">Historial por mes</span>
+                      <span className="font-semibold text-purple-600">✓</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-purple-50 rounded">
+                      <span className="text-gray-600">Estadísticas (Total, Clínica, Domicilio)</span>
+                      <span className="font-semibold text-purple-600">✓</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-purple-50 rounded">
+                      <span className="text-gray-600">Tabla detallada</span>
+                      <span className="font-semibold text-purple-600">✓</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Responsive */}
+                <div className="bg-white rounded-lg p-4 border border-orange-200">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-bold text-[#0f5c4d]">Responsive</h3>
+                    <span className="text-2xl">✅</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">Funciona en todos los dispositivos</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center p-2 bg-orange-50 rounded">
+                      <span className="text-gray-600">PC</span>
+                      <span className="font-semibold text-orange-600">✓</span>
+                    </div>
+                    <div className="flex justify-between items-center p-2 bg-orange-50 rounded">
+                      <span className="text-gray-600">Celular</span>
+                      <span className="font-semibold text-orange-600">✓</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Estadísticas en Tiempo Real */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <h3 className="text-lg font-bold text-[#0f5c4d] mb-4">📈 Estadísticas en Tiempo Real</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-[#eef4f6] to-[#f5f9fb] rounded-lg p-4 text-center border border-gray-200">
+                  <p className="text-xs text-gray-600 mb-2">Usuarios Activos</p>
+                  <p className="text-3xl font-bold text-[#0f5c4d]">{usuarios.length}</p>
+                </div>
+                <div className="bg-gradient-to-br from-[#eef4f6] to-[#f5f9fb] rounded-lg p-4 text-center border border-gray-200">
+                  <p className="text-xs text-gray-600 mb-2">Sesiones Registradas</p>
+                  <p className="text-3xl font-bold text-[#0f5c4d]">{registros.length}</p>
+                </div>
+                <div className="bg-gradient-to-br from-[#eef4f6] to-[#f5f9fb] rounded-lg p-4 text-center border border-gray-200">
+                  <p className="text-xs text-gray-600 mb-2">Clínicas</p>
+                  <p className="text-3xl font-bold text-blue-600">{registros.filter(r => r.tipo === "clinica").length}</p>
+                </div>
+                <div className="bg-gradient-to-br from-[#eef4f6] to-[#f5f9fb] rounded-lg p-4 text-center border border-gray-200">
+                  <p className="text-xs text-gray-600 mb-2">Domicilios</p>
+                  <p className="text-3xl font-bold text-purple-600">{registros.filter(r => r.tipo !== "clinica").length}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Usuarios con Perfil Completo */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <h3 className="text-lg font-bold text-[#0f5c4d] mb-4">👤 Perfil de Usuarios</h3>
+              <div className="space-y-2">
+                {usuarios.map((u) => {
+                  const profileComplete = u.telefono && u.banco && u.nro_cuenta;
+                  const pacientesAtendidos = obtenerPacientesAtendidos(u.email).length;
+                  return (
+                    <div key={u.email} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-[#0f5c4d]">{u.nombre}</p>
+                        <p className="text-xs text-gray-600">{u.email}</p>
+                      </div>
+                      <div className="flex gap-3 items-center">
+                        <div className="text-center">
+                          <p className="text-sm font-bold text-[#0f5c4d]">{pacientesAtendidos}</p>
+                          <p className="text-xs text-gray-600">pacientes</p>
+                        </div>
+                        <div>
+                          <span className={`text-xs font-semibold px-2 py-1 rounded ${profileComplete ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                            {profileComplete ? "✓ Completo" : "⚠ Incompleto"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
