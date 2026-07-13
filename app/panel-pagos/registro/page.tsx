@@ -28,6 +28,7 @@ export default function RegistroDiario() {
   const [horaHasta, setHoraHasta] = useState("09:00");
   const [observaciones, setObservaciones] = useState("");
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -53,6 +54,7 @@ export default function RegistroDiario() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
 
     try {
       const res = await fetch("/api/panel-pagos/registros", {
@@ -70,12 +72,19 @@ export default function RegistroDiario() {
         }),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
         setSuccess(true);
         setPaciente("");
         setObservaciones("");
         setTimeout(() => setSuccess(false), 3000);
+      } else {
+        setError(data.error || "Error al registrar sesión");
       }
+    } catch (err) {
+      setError("Error al conectar con el servidor");
+      console.error("Error:", err);
     } finally {
       setLoading(false);
     }
@@ -128,6 +137,12 @@ export default function RegistroDiario() {
           {success && (
             <div className="mb-6 bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded">
               ✓ Paciente registrado correctamente
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded">
+              ✗ {error}
             </div>
           )}
 
