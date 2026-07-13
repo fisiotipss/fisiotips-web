@@ -42,6 +42,7 @@ export default function AdminDashboard() {
   const [tab, setTab] = useState<"pagos" | "usuarios" | "pacientes-atendidos" | "estado">("pagos");
   const [changePassModal, setChangePassModal] = useState<{ email: string; nombre: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
+  const [editModal, setEditModal] = useState<Usuario | null>(null);
 
   useEffect(() => {
     const data = localStorage.getItem("panelAuth");
@@ -103,6 +104,25 @@ export default function AdminDashboard() {
         alert("Contraseña actualizada correctamente");
         setChangePassModal(null);
         setNewPassword("");
+        cargarDatos();
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const handleSaveUsuario = async () => {
+    if (!editModal) return;
+    try {
+      const res = await fetch("/api/panel-pagos/usuarios", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editModal),
+      });
+      if (res.ok) {
+        alert("Usuario actualizado correctamente");
+        setEditModal(null);
+        cargarDatos();
       }
     } catch (error) {
       console.error("Error:", error);
@@ -409,7 +429,13 @@ export default function AdminDashboard() {
                       <td className="p-3">{u.telefono || "-"}</td>
                       <td className="p-3">{u.banco || "-"}</td>
                       <td className="p-3 text-xs">{u.nro_cuenta || "-"}</td>
-                      <td className="p-3 text-center">
+                      <td className="p-3 text-center space-x-2 flex justify-center">
+                        <button
+                          onClick={() => setEditModal(u)}
+                          className="text-xs bg-green-500 text-white px-3 py-1 rounded hover:opacity-90"
+                        >
+                          ✏️ Editar
+                        </button>
                         <button
                           onClick={() => setChangePassModal({ email: u.email, nombre: u.nombre })}
                           className="text-xs bg-[#2563eb] text-white px-3 py-1 rounded hover:opacity-90"
@@ -633,6 +659,84 @@ export default function AdminDashboard() {
                   setChangePassModal(null);
                   setNewPassword("");
                 }}
+                className="flex-1 bg-gray-200 text-gray-700 font-medium py-2 rounded-md hover:bg-gray-300"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 my-8">
+            <h3 className="text-lg font-bold text-[#0f5c4d] mb-4">Editar Usuario: {editModal.nombre}</h3>
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-1">Email</label>
+                <input
+                  type="email"
+                  value={editModal.email}
+                  onChange={(e) => setEditModal({ ...editModal, email: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-1">Nombre</label>
+                <input
+                  type="text"
+                  value={editModal.nombre}
+                  onChange={(e) => setEditModal({ ...editModal, nombre: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-1">Teléfono</label>
+                <input
+                  type="tel"
+                  value={editModal.telefono || ""}
+                  onChange={(e) => setEditModal({ ...editModal, telefono: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-1">Banco</label>
+                <input
+                  type="text"
+                  value={editModal.banco || ""}
+                  onChange={(e) => setEditModal({ ...editModal, banco: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-1">Número de Cuenta</label>
+                <input
+                  type="text"
+                  value={editModal.nro_cuenta || ""}
+                  onChange={(e) => setEditModal({ ...editModal, nro_cuenta: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-1">Sucursal (opcional)</label>
+                <input
+                  type="text"
+                  value={editModal.sucursal || ""}
+                  onChange={(e) => setEditModal({ ...editModal, sucursal: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={handleSaveUsuario}
+                className="flex-1 bg-green-500 text-white font-medium py-2 rounded-md hover:opacity-90"
+              >
+                Guardar Cambios
+              </button>
+              <button
+                onClick={() => setEditModal(null)}
                 className="flex-1 bg-gray-200 text-gray-700 font-medium py-2 rounded-md hover:bg-gray-300"
               >
                 Cancelar
