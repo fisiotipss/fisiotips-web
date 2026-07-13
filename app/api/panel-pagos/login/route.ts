@@ -1,35 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+
+const supabase = supabaseUrl && supabaseKey
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
 const ADMIN_EMAIL = "reactive.admin@clinic.com";
 const ADMIN_PASSWORD = "reactive.admin1";
-
-// Mock usuarios (en producción sería una BD)
-const usuarios = [
-  {
-    email: "ariel@reactive.com",
-    password: "reactive.fisio1",
-    role: "fisio",
-    name: "Ariel Martínez",
-  },
-  {
-    email: "ivonne@reactive.com",
-    password: "reactive.fisio2",
-    role: "fisio",
-    name: "Ivonne Rodríguez",
-  },
-  {
-    email: "carlos@reactive.com",
-    password: "reactive.socio1",
-    role: "socio",
-    name: "Carlos López",
-  },
-  {
-    email: "sandra@reactive.com",
-    password: "reactive.socio2",
-    role: "socio",
-    name: "Sandra García",
-  },
-];
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,12 +31,30 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Validar usuarios
-    const usuario = usuarios.find(
-      (u) => u.email === email && u.password === password
-    );
+    // Validar usuarios desde Supabase
+    if (!supabase) {
+      return NextResponse.json(
+        { error: "Base de datos no configurada" },
+        { status: 500 }
+      );
+    }
 
-    if (!usuario) {
+    const { data: usuarios, error } = await supabase
+      .from("usuarios")
+      .select("*")
+      .eq("email", email);
+
+    if (error || !usuarios || usuarios.length === 0) {
+      return NextResponse.json(
+        { error: "Credenciales inválidas" },
+        { status: 401 }
+      );
+    }
+
+    const usuario = usuarios[0];
+
+    // Validar contraseña
+    if (usuario.password !== password) {
       return NextResponse.json(
         { error: "Credenciales inválidas" },
         { status: 401 }
@@ -65,10 +63,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       email: usuario.email,
-      role: usuario.role,
-      name: usuario.name,
+      role: usuario.rol,
+      name: usuario.nombre,
     });
   } catch (error) {
+    console.error("Error:", error);
     return NextResponse.json(
       { error: "Error al procesar la solicitud" },
       { status: 500 }
