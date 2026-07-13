@@ -9,51 +9,31 @@ interface AuthData {
   role: string;
 }
 
-const mockData = [
-  {
-    nombre: "Ariel Martínez",
-    tipo: "Fisio",
-    horas: 32,
-    detalles: "28h × $250 = $7,000 | 4h × $450 = $1,800",
-    total: 8800,
-    estado: "Pendiente",
-  },
-  {
-    nombre: "Ivonne Rodríguez",
-    tipo: "Fisio",
-    horas: 28,
-    detalles: "28h × $250 = $7,000 | 4 dom × $700 = $2,800",
-    total: 9800,
-    estado: "Pagado",
-  },
-  {
-    nombre: "Carlos López",
-    tipo: "Socio",
-    horas: 24,
-    detalles: "24h × $350 = $8,400 (sin límite)",
-    total: 8400,
-    estado: "Pagado",
-  },
-  {
-    nombre: "Sandra García",
-    tipo: "Socio",
-    horas: 20,
-    detalles: "20h × $350 = $7,000",
-    total: 7000,
-    estado: "Pendiente",
-  },
-];
+interface Registro {
+  email: string;
+  tipo: string;
+}
 
-const sessionData = [
-  { paciente: "Juan García", compradas: 10, realizadas: 8, disponibles: 2 },
-  { paciente: "Ivonne López", compradas: 6, realizadas: 6, disponibles: 0 },
-  { paciente: "Ariel Sánchez", compradas: 15, realizadas: 11, disponibles: 4 },
-  { paciente: "María Ruiz", compradas: 8, realizadas: 5, disponibles: 3 },
-];
+interface Usuario {
+  email: string;
+  nombre: string;
+  rol: string;
+}
+
+interface Paciente {
+  nombre: string;
+  apellido: string;
+  sesiones_compradas: number;
+  sesiones_disponibles: number;
+}
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [auth, setAuth] = useState<AuthData | null>(null);
+  const [registros, setRegistros] = useState<Registro[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [pacientes, setPacientes] = useState<Paciente[]>([]);
+  const [mes, setMes] = useState("2026-07");
 
   useEffect(() => {
     const data = localStorage.getItem("panelAuth");
@@ -61,8 +41,81 @@ export default function AdminDashboard() {
       router.push("/panel-pagos");
     } else {
       setAuth(JSON.parse(data));
+      cargarDatos();
     }
   }, [router]);
+
+  useEffect(() => {
+    if (auth) {
+      cargarDatos();
+    }
+  }, [mes, auth]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (auth) cargarDatos();
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [auth]);
+
+  const cargarDatos = async () => {
+    try {
+      const [regRes, usuRes, pacRes] = await Promise.all([
+        fetch(`/api/panel-pagos/registros?mes=${mes}&allUsers=true`),
+        fetch("/api/panel-pagos/usuarios"),
+        fetch("/api/panel-pagos/pacientes"),
+      ]);
+
+      if (regRes.ok) {
+        const { data } = await regRes.json();
+        setRegistros(data || []);
+      }
+      if (usuRes.ok) {
+        const { data } = await usuRes.json();
+        setUsuarios(data?.filter((u: Usuario) => u.rol !== "admin") || []);
+      }
+      if (pacRes.ok) {
+        const { data } = await pacRes.json();
+        setPacientes(data || []);
+      }
+    } catch (error) {
+      console.error("Error cargando datos:", error);
+    }
+  };
+
+  const calcularPagos = () => {
+    const porUsuario = new Map<string, { sesiones: number; domicilios: number }>();
+
+    registros.forEach((reg) => {
+      if (!porUsuario.has(reg.email)) {
+        porUsuario.set(reg.email, { sesiones: 0, domicilios: 0 });
+      }
+      const data = porUsuario.get(reg.email)!;
+      if (reg.tipo === "clinica") {
+        data.sesiones++;
+      } else {
+        data.domicilios++;
+      }
+    });
+
+    return Array.from(porUsuario.entries()).map(([email, { sesiones, domicilios }]) => {
+      const usuario = usuarios.find((u) => u.email === email);
+      const tipo = usuario?.rol === "Socio" ? "Socio" : "Fisio";
+      const monto =
+        tipo === "Socio"
+          ? sesiones * 350 + domicilios * 350
+          : sesiones * 250 + domicilios * (domicilios === 1 ? 700 : 1000);
+
+      return {
+        email,
+        nombre: usuario?.nombre || email,
+        tipo,
+        sesiones,
+        domicilios,
+        monto,
+      };
+    });
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("panelAuth");
@@ -71,7 +124,10 @@ export default function AdminDashboard() {
 
   if (!auth) return null;
 
-  const totalPagar = mockData.reduce((sum, item) => sum + item.total, 0);
+  const pagos = calcularPagos();
+  const totalPagar = pagos.reduce((sum, p) => sum + p.monto, 0);
+  const totalSesiones = registros.length;
+  const domicilios = registros.filter((r) => r.tipo !== "clinica").length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#eef4f6] to-white">
@@ -82,6 +138,12 @@ export default function AdminDashboard() {
             <p className="text-sm text-gray-600">Dashboard de pagos - Julio 2026</p>
           </div>
           <div className="flex gap-3">
+            <Link
+              href="/panel-pagos/admin/atendidos"
+              className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-md hover:opacity-90"
+            >
+              📊 Atendidos
+            </Link>
             <Link
               href="/panel-pagos/admin/pacientes"
               className="px-4 py-2 bg-[#2563eb] text-white text-sm font-medium rounded-md hover:opacity-90"
@@ -98,7 +160,7 @@ export default function AdminDashboard() {
               href="/panel-pagos/admin/usuarios"
               className="px-4 py-2 bg-[#0f5c4d] text-white text-sm font-medium rounded-md hover:opacity-90"
             >
-              + Nuevo usuario
+              + Usuario
             </Link>
             <button
               onClick={handleLogout}
@@ -113,10 +175,10 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto p-6 space-y-6">
         <div className="grid grid-cols-4 gap-4">
           {[
-            { label: "Sesiones", value: "127" },
-            { label: "Horas clínica", value: "94h" },
-            { label: "Domicilios", value: "33" },
-            { label: "Personal", value: "4" },
+            { label: "Sesiones", value: totalSesiones.toString() },
+            { label: "Clínica", value: (totalSesiones - domicilios).toString() },
+            { label: "Domicilios", value: domicilios.toString() },
+            { label: "Personal", value: pagos.length.toString() },
           ].map((metric) => (
             <div
               key={metric.label}
@@ -129,12 +191,24 @@ export default function AdminDashboard() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-bold text-[#0f5c4d] mb-4">
-            Cálculo de pagos por personal
-          </h2>
-          <div className="mb-4 p-3 bg-[#eef4f6] border-l-3 border-[#0f5c4d] text-sm text-[#0f5c4d]">
-            Fisios: $250/paciente (3+ en la misma hora = $450/h) | Socios: $350/paciente
-            (fijo) | Domicilio A: +$700 | Domicilio B: +$1000
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-[#0f5c4d]">
+              Cálculo de pagos por personal
+            </h2>
+            <select
+              value={mes}
+              onChange={(e) => setMes(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+            >
+              {["2026-06", "2026-07", "2026-08", "2026-09"].map((m) => (
+                <option key={m} value={m}>
+                  {new Date(m + "-01").toLocaleDateString("es-ES", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="overflow-x-auto">
@@ -147,72 +221,59 @@ export default function AdminDashboard() {
                   <th className="text-left p-3 text-[#3b5f7c] font-semibold">
                     Tipo
                   </th>
-                  <th className="text-left p-3 text-[#3b5f7c] font-semibold">
-                    Horas
+                  <th className="text-center p-3 text-[#3b5f7c] font-semibold">
+                    Clínica
                   </th>
-                  <th className="text-left p-3 text-[#3b5f7c] font-semibold">
-                    Detalles
+                  <th className="text-center p-3 text-[#3b5f7c] font-semibold">
+                    Domicilio
                   </th>
                   <th className="text-left p-3 text-[#3b5f7c] font-semibold">
                     Total
                   </th>
-                  <th className="text-left p-3 text-[#3b5f7c] font-semibold">
-                    Estado
-                  </th>
-                  <th className="text-left p-3 text-[#3b5f7c] font-semibold">
-                    Acción
-                  </th>
                 </tr>
               </thead>
               <tbody>
-                {mockData.map((item) => (
-                  <tr key={item.nombre} className="border-b border-gray-200 hover:bg-gray-50">
-                    <td className="p-3 font-semibold text-[#0f5c4d]">
-                      {item.nombre}
-                    </td>
-                    <td className="p-3">
-                      <span
-                        className={`text-xs font-semibold px-2 py-1 rounded ${
-                          item.tipo === "Fisio"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-purple-100 text-purple-700"
-                        }`}
-                      >
-                        {item.tipo}
-                      </span>
-                    </td>
-                    <td className="p-3 text-gray-600">{item.horas}h</td>
-                    <td className="p-3 text-xs text-gray-600">{item.detalles}</td>
-                    <td className="p-3 font-semibold text-[#0f5c4d]">
-                      ${item.total.toLocaleString()}
-                    </td>
-                    <td className="p-3">
-                      <span
-                        className={`text-xs font-semibold px-2 py-1 rounded ${
-                          item.estado === "Pagado"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
-                      >
-                        {item.estado}
-                      </span>
-                    </td>
-                    <td className="p-3">
-                      <button className="text-xs bg-[#2563eb] text-white px-3 py-1 rounded hover:opacity-90">
-                        {item.estado === "Pagado" ? "Comprobante" : "Pagar"}
-                      </button>
+                {pagos.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-3 text-center text-gray-600">
+                      No hay registros para este mes
                     </td>
                   </tr>
-                ))}
-                <tr className="bg-[#eef4f6] font-bold border-t-2 border-gray-200">
-                  <td colSpan={4} className="p-3 text-right text-[#0f5c4d]">
-                    Total mes:
-                  </td>
-                  <td className="p-3 text-[#0f5c4d]">
-                    ${totalPagar.toLocaleString()}
-                  </td>
-                  <td colSpan={2}></td>
-                </tr>
+                ) : (
+                  <>
+                    {pagos.map((pago) => (
+                      <tr key={pago.email} className="border-b border-gray-200 hover:bg-gray-50">
+                        <td className="p-3 font-semibold text-[#0f5c4d]">
+                          {pago.nombre}
+                        </td>
+                        <td className="p-3">
+                          <span
+                            className={`text-xs font-semibold px-2 py-1 rounded ${
+                              pago.tipo === "Fisio"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-purple-100 text-purple-700"
+                            }`}
+                          >
+                            {pago.tipo}
+                          </span>
+                        </td>
+                        <td className="p-3 text-center">{pago.sesiones}</td>
+                        <td className="p-3 text-center">{pago.domicilios}</td>
+                        <td className="p-3 font-semibold text-[#0f5c4d]">
+                          ${pago.monto.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="bg-[#eef4f6] font-bold border-t-2 border-gray-200">
+                      <td colSpan={4} className="p-3 text-right text-[#0f5c4d]">
+                        Total mes:
+                      </td>
+                      <td className="p-3 text-[#0f5c4d]">
+                        ${totalPagar.toLocaleString()}
+                      </td>
+                    </tr>
+                  </>
+                )}
               </tbody>
             </table>
           </div>
@@ -233,30 +294,29 @@ export default function AdminDashboard() {
                     Compradas
                   </th>
                   <th className="text-center p-3 text-[#3b5f7c] font-semibold">
-                    Realizadas
-                  </th>
-                  <th className="text-center p-3 text-[#3b5f7c] font-semibold">
                     Disponibles
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {sessionData.map((item) => (
-                  <tr key={item.paciente} className="border-b border-gray-200 hover:bg-gray-50">
+                {pacientes.map((p) => (
+                  <tr key={p.nombre} className="border-b border-gray-200 hover:bg-gray-50">
                     <td className="p-3 font-semibold text-[#0f5c4d]">
-                      {item.paciente}
+                      {p.nombre} {p.apellido}
                     </td>
-                    <td className="p-3 text-center">{item.compradas}</td>
-                    <td className="p-3 text-center">{item.realizadas}</td>
+                    <td className="p-3 text-center">{p.sesiones_compradas}</td>
                     <td
                       className={`p-3 text-center font-semibold ${
-                        item.disponibles === 0
+                        p.sesiones_disponibles === 0
                           ? "text-red-600"
-                          : "text-[#2563eb]"
+                          : p.sesiones_disponibles === 1
+                          ? "text-orange-600"
+                          : "text-green-600"
                       }`}
                     >
-                      {item.disponibles}
-                      {item.disponibles === 0 && " ⚠"}
+                      {p.sesiones_disponibles}
+                      {p.sesiones_disponibles === 0 && " ⚠"}
+                      {p.sesiones_disponibles === 1 && " ⚠ (última)"}
                     </td>
                   </tr>
                 ))}
