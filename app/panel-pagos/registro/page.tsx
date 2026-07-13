@@ -68,7 +68,6 @@ export default function RegistroDiario() {
           horaDesde: tipo === "clinica" ? horaDesde : null,
           horaHasta: tipo === "clinica" ? horaHasta : null,
           observaciones,
-          rol: auth?.role,
         }),
       });
 

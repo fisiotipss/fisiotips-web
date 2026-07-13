@@ -11,7 +11,6 @@ interface Sesion {
   hora_desde?: string;
   hora_hasta?: string;
   observaciones?: string;
-  monto?: number;
 }
 
 export default function SesionesPage() {
@@ -53,6 +52,17 @@ export default function SesionesPage() {
 
   const tipoLabel = (tipo: string) => {
     return tipo === "clinica" ? "Clínica" : "Domicilio";
+  };
+
+  const calcularMonto = (tipo: string) => {
+    const rol = JSON.parse(localStorage.getItem("panelAuth") || "{}").role;
+    if (rol === "Socio") {
+      return 350;
+    }
+    if (tipo === "clinica") {
+      return 250;
+    }
+    return 700;
   };
 
   const stats = {
@@ -166,7 +176,7 @@ export default function SesionesPage() {
                           : "-"}
                       </td>
                       <td className="p-3 font-semibold text-[#0f5c4d]">
-                        ${s.monto || 0}
+                        ${calcularMonto(s.tipo)}
                       </td>
                       <td className="p-3 text-xs text-gray-600 truncate">
                         {s.observaciones || "-"}
