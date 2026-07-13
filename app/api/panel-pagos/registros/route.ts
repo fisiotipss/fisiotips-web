@@ -10,7 +10,7 @@ const supabase = supabaseUrl && supabaseKey
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, paciente, tipo, horaDesde, horaHasta, observaciones } =
+    const { email, paciente, tipo, horaDesde, horaHasta, observaciones, rol } =
       await request.json();
 
     if (!email || !paciente || !tipo) {
@@ -34,6 +34,16 @@ export async function POST(request: NextRequest) {
           ? "domicilio_a"
           : "domicilio_b";
 
+    const calcularMonto = () => {
+      if (rol === "Socio") {
+        return 350;
+      }
+      if (tipo === "clinica") {
+        return 250;
+      }
+      return 700;
+    };
+
     const registro = {
       email,
       fecha: new Date().toISOString().split("T")[0],
@@ -42,6 +52,7 @@ export async function POST(request: NextRequest) {
       hora_desde: tipo === "clinica" ? horaDesde : null,
       hora_hasta: tipo === "clinica" ? horaHasta : null,
       observaciones,
+      monto: calcularMonto(),
     };
 
     if (!supabase) {

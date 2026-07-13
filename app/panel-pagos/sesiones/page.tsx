@@ -11,6 +11,7 @@ interface Sesion {
   hora_desde?: string;
   hora_hasta?: string;
   observaciones?: string;
+  monto?: number;
 }
 
 export default function SesionesPage() {
@@ -127,10 +128,13 @@ export default function SesionesPage() {
                       Paciente
                     </th>
                     <th className="text-left p-3 text-[#0f5c4d] font-semibold">
-                      Tipo
+                      Ubicación
                     </th>
                     <th className="text-left p-3 text-[#0f5c4d] font-semibold">
                       Horario
+                    </th>
+                    <th className="text-left p-3 text-[#0f5c4d] font-semibold">
+                      Monto
                     </th>
                     <th className="text-left p-3 text-[#0f5c4d] font-semibold">
                       Observaciones
@@ -160,6 +164,9 @@ export default function SesionesPage() {
                         {s.hora_desde && s.hora_hasta
                           ? `${s.hora_desde} - ${s.hora_hasta}`
                           : "-"}
+                      </td>
+                      <td className="p-3 font-semibold text-[#0f5c4d]">
+                        ${s.monto || 0}
                       </td>
                       <td className="p-3 text-xs text-gray-600 truncate">
                         {s.observaciones || "-"}

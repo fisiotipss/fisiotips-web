@@ -13,6 +13,9 @@ interface Registro {
   email: string;
   tipo: string;
   paciente: string;
+  monto?: number;
+  hora_desde?: string;
+  hora_hasta?: string;
 }
 
 interface Usuario {
@@ -138,11 +141,11 @@ export default function AdminDashboard() {
   };
 
   const calcularPagos = () => {
-    const porUsuario = new Map<string, { sesiones: number; domicilios: number }>();
+    const porUsuario = new Map<string, { sesiones: number; domicilios: number; montoTotal: number }>();
 
     registros.forEach((reg) => {
       if (!porUsuario.has(reg.email)) {
-        porUsuario.set(reg.email, { sesiones: 0, domicilios: 0 });
+        porUsuario.set(reg.email, { sesiones: 0, domicilios: 0, montoTotal: 0 });
       }
       const data = porUsuario.get(reg.email)!;
       if (reg.tipo === "clinica") {
@@ -150,15 +153,12 @@ export default function AdminDashboard() {
       } else {
         data.domicilios++;
       }
+      data.montoTotal += reg.monto || 0;
     });
 
-    return Array.from(porUsuario.entries()).map(([email, { sesiones, domicilios }]) => {
+    return Array.from(porUsuario.entries()).map(([email, { sesiones, domicilios, montoTotal }]) => {
       const usuario = usuarios.find((u) => u.email === email);
       const tipo = usuario?.rol === "Socio" ? "Socio" : "Fisio";
-      const monto =
-        tipo === "Socio"
-          ? sesiones * 350 + domicilios * 350
-          : sesiones * 250 + domicilios * (domicilios === 1 ? 700 : 1000);
 
       return {
         email,
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
         tipo,
         sesiones,
         domicilios,
-        monto,
+        monto: montoTotal,
       };
     });
   };
