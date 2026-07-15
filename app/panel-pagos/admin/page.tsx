@@ -368,20 +368,12 @@ export default function AdminDashboard() {
                   </button>
                 )}
               </div>
-              <select
+              <input
+                type="month"
                 value={mes}
                 onChange={(e) => setMes(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-              >
-                {Array.from({ length: 12 }, (_, i) => `2026-${String(i + 1).padStart(2, "0")}`).map((m) => (
-                  <option key={m} value={m}>
-                    {new Date(m + "-01").toLocaleDateString("es-ES", {
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
             <div className="overflow-x-auto">
@@ -465,20 +457,12 @@ export default function AdminDashboard() {
               <h2 className="text-lg font-bold text-[#0f5c4d]">
                 Cálculo de pagos por personal
               </h2>
-              <select
+              <input
+                type="month"
                 value={mes}
                 onChange={(e) => setMes(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-              >
-                {Array.from({ length: 12 }, (_, i) => `2026-${String(i + 1).padStart(2, "0")}`).map((m) => (
-                  <option key={m} value={m}>
-                    {new Date(m + "-01").toLocaleDateString("es-ES", {
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
             <div className="overflow-x-auto">
