@@ -53,7 +53,7 @@ export default function AdminDashboard() {
   const [eliminando, setEliminando] = useState(false);
 
   // Pacientes form
-  const [newPaciente, setNewPaciente] = useState({ nombre: "", apellido: "", lesion: "", sesiones: 10 });
+  const [newPaciente, setNewPaciente] = useState({ nombre: "", apellido: "", lesion: "", tipo: "clinica", sesiones: 10 });
   const [loadingPaciente, setLoadingPaciente] = useState(false);
 
   useEffect(() => {
@@ -156,6 +156,7 @@ export default function AdminDashboard() {
           nombre: newPaciente.nombre,
           apellido: newPaciente.apellido,
           lesion: newPaciente.lesion || "General",
+          tipo: newPaciente.tipo,
           sesiones_compradas: newPaciente.sesiones,
           sesiones_disponibles: newPaciente.sesiones,
         }),
@@ -656,6 +657,19 @@ export default function AdminDashboard() {
                   placeholder="Ej: Esguince de tobillo"
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
+                  Tipo
+                </label>
+                <select
+                  value={newPaciente.tipo}
+                  onChange={(e) => setNewPaciente({ ...newPaciente, tipo: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                >
+                  <option value="clinica">Clínica</option>
+                  <option value="domicilio">Domicilio</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
