@@ -164,7 +164,7 @@ export default function AdminDashboard() {
 
       if (res.ok) {
         alert("Paciente agregado correctamente");
-        setNewPaciente({ nombre: "", apellido: "", lesion: "", sesiones: 10 });
+        setNewPaciente({ nombre: "", apellido: "", lesion: "", tipo: "clinica", sesiones: 10 });
         cargarDatos();
       } else {
         alert("Error al agregar paciente");
