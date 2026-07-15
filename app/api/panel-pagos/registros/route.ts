@@ -122,24 +122,24 @@ export async function GET(request: NextRequest) {
       query = query.eq("email", email);
     }
 
-    if (mes) {
-      query = query.ilike("fecha", `${mes}%`);
-    }
-
-    if (!allUsers) {
-      query = query.order("fecha", { ascending: false });
-    }
-
-    const { data, error } = await query;
+    // No filtrar por mes en Supabase, hacerlo en código
+    const { data, error } = await query.order("fecha", { ascending: false });
 
     if (error) {
-      console.error("Error Supabase:", error);
+      console.error("Error Supabase GET:", error);
       return NextResponse.json({ data: [] });
     }
 
-    return NextResponse.json({ data });
+    // Filtrar por mes en código
+    let filteredData = data || [];
+    if (mes) {
+      filteredData = filteredData.filter((r: any) => r.fecha?.startsWith(mes));
+    }
+
+    return NextResponse.json({ data: filteredData });
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json({ data: [] });
   }
 }
+
