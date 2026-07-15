@@ -49,6 +49,8 @@ export default function AdminDashboard() {
   const [changePassModal, setChangePassModal] = useState<{ email: string; nombre: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [editModal, setEditModal] = useState<Usuario | null>(null);
+  const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
+  const [eliminando, setEliminando] = useState(false);
 
   // Pacientes form
   const [newPaciente, setNewPaciente] = useState({ nombre: "", apellido: "", lesion: "", sesiones: 10 });
@@ -225,6 +227,49 @@ export default function AdminDashboard() {
     });
   };
 
+  const handleToggleCheck = (id: string) => {
+    const nuevo = new Set(seleccionados);
+    if (nuevo.has(id)) {
+      nuevo.delete(id);
+    } else {
+      nuevo.add(id);
+    }
+    setSeleccionados(nuevo);
+  };
+
+  const handleEliminarSeleccionados = async () => {
+    if (seleccionados.size === 0) {
+      alert("Selecciona al menos un registro");
+      return;
+    }
+
+    if (!confirm(`¿Eliminar ${seleccionados.size} registro(s)?`)) {
+      return;
+    }
+
+    setEliminando(true);
+    try {
+      const res = await fetch("/api/panel-pagos/registros-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(seleccionados) }),
+      });
+
+      if (res.ok) {
+        alert("Registros eliminados correctamente");
+        setSeleccionados(new Set());
+        cargarDatos();
+      } else {
+        alert("Error al eliminar registros");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error al eliminar registros");
+    } finally {
+      setEliminando(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("panelAuth");
     router.push("/panel-pagos");
@@ -309,9 +354,20 @@ export default function AdminDashboard() {
         {tab === "atenciones" && (
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-bold text-[#0f5c4d]">
-                Atenciones registradas
-              </h2>
+              <div className="flex gap-3">
+                <h2 className="text-lg font-bold text-[#0f5c4d]">
+                  Atenciones registradas
+                </h2>
+                {seleccionados.size > 0 && (
+                  <button
+                    onClick={handleEliminarSeleccionados}
+                    disabled={eliminando}
+                    className="text-sm bg-red-500 text-white px-3 py-2 rounded-md hover:opacity-90 disabled:opacity-50"
+                  >
+                    🗑️ Eliminar {seleccionados.size}
+                  </button>
+                )}
+              </div>
               <select
                 value={mes}
                 onChange={(e) => setMes(e.target.value)}
@@ -332,6 +388,19 @@ export default function AdminDashboard() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b-2 border-gray-200 bg-[#eef4f6]">
+                    <th className="text-center p-3 w-8">
+                      <input
+                        type="checkbox"
+                        checked={seleccionados.size === registros.length && registros.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSeleccionados(new Set(registros.map((r) => r.id)));
+                          } else {
+                            setSeleccionados(new Set());
+                          }
+                        }}
+                      />
+                    </th>
                     <th className="text-left p-3 text-[#0f5c4d] font-semibold">Usuario</th>
                     <th className="text-left p-3 text-[#0f5c4d] font-semibold">Fecha</th>
                     <th className="text-left p-3 text-[#0f5c4d] font-semibold">Ubicación</th>
@@ -343,13 +412,20 @@ export default function AdminDashboard() {
                 <tbody>
                   {registros.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="p-3 text-center text-gray-600">
+                      <td colSpan={7} className="p-3 text-center text-gray-600">
                         No hay atenciones registradas para este mes
                       </td>
                     </tr>
                   ) : (
                     registros.map((reg) => (
                       <tr key={reg.id} className="border-b border-gray-200 hover:bg-gray-50">
+                        <td className="p-3 text-center">
+                          <input
+                            type="checkbox"
+                            checked={seleccionados.has(reg.id)}
+                            onChange={() => handleToggleCheck(reg.id)}
+                          />
+                        </td>
                         <td className="p-3 font-semibold text-[#0f5c4d]">
                           {getNombreUsuario(reg.email)}
                         </td>
