@@ -212,32 +212,30 @@ export default function RegistroDiario() {
               </div>
             </div>
 
-            {tipo === "clinica" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
-                    Desde
-                  </label>
-                  <input
-                    type="time"
-                    value={horaDesde}
-                    onChange={(e) => setHoraDesde(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
-                    Hasta
-                  </label>
-                  <input
-                    type="time"
-                    value={horaHasta}
-                    onChange={(e) => setHoraHasta(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
-                  />
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
+                  Desde
+                </label>
+                <input
+                  type="time"
+                  value={horaDesde}
+                  onChange={(e) => setHoraDesde(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                />
               </div>
-            )}
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
+                  Hasta
+                </label>
+                <input
+                  type="time"
+                  value={horaHasta}
+                  onChange={(e) => setHoraHasta(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                />
+              </div>
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
