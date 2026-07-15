@@ -42,7 +42,7 @@ export default function Nav() {
           ))}
         </nav>
 
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <a href="/panel-pagos" className="text-xs text-gray-900 hover:text-gray-600 font-medium">
             Acceso usuario
           </a>
