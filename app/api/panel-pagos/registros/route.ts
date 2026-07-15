@@ -51,18 +51,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log("Intentando insertar registro:", registro);
+
     const { data: regData, error: regError } = await supabase
       .from("registros")
       .insert([registro])
       .select();
 
     if (regError) {
-      console.error("Error al insertar registro:", regError);
+      console.error("Error Supabase POST:", JSON.stringify(regError));
       return NextResponse.json(
-        { error: "Error al registrar paciente" },
+        { error: `Error al registrar: ${regError.message}`, details: regError },
         { status: 500 }
       );
     }
+
+    console.log("Registro insertado:", regData);
 
     const { data: pacientes, error: pacError } = await supabase
       .from("pacientes")
