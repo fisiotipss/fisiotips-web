@@ -373,7 +373,7 @@ export default function AdminDashboard() {
                 onChange={(e) => setMes(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm"
               >
-                {["2026-06", "2026-07", "2026-08", "2026-09"].map((m) => (
+                {Array.from({ length: 12 }, (_, i) => `2026-${String(i + 1).padStart(2, "0")}`).map((m) => (
                   <option key={m} value={m}>
                     {new Date(m + "-01").toLocaleDateString("es-ES", {
                       month: "long",
@@ -470,7 +470,7 @@ export default function AdminDashboard() {
                 onChange={(e) => setMes(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm"
               >
-                {["2026-06", "2026-07", "2026-08", "2026-09"].map((m) => (
+                {Array.from({ length: 12 }, (_, i) => `2026-${String(i + 1).padStart(2, "0")}`).map((m) => (
                   <option key={m} value={m}>
                     {new Date(m + "-01").toLocaleDateString("es-ES", {
                       month: "long",
