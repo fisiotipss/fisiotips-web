@@ -8,6 +8,14 @@ const supabase = supabaseUrl && supabaseKey
   ? createClient(supabaseUrl, supabaseKey)
   : null;
 
+function agruparHora(horaDesde: string): string {
+  if (!horaDesde) return "";
+  const [horas, minutos] = horaDesde.split(":").map(Number);
+  const minInt = minutos || 0;
+  const horaAgrupada = minInt >= 40 ? horas + 1 : horas;
+  return `${String(horaAgrupada).padStart(2, "0")}:00`;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email, fecha, paciente, tipo, horaDesde, horaHasta, observaciones } =
@@ -27,6 +35,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!supabase) {
+      return NextResponse.json(
+        { error: "Base de datos no configurada" },
+        { status: 500 }
+      );
+    }
+
+    // Validación 1: Paciente no existe el MISMO DÍA
+    const { data: duplicados } = await supabase
+      .from("registros")
+      .select("id")
+      .eq("email", email)
+      .eq("fecha", fecha)
+      .eq("paciente", paciente)
+      .limit(1);
+
+    if (duplicados && duplicados.length > 0) {
+      return NextResponse.json(
+        { error: "Paciente ya registrado hoy" },
+        { status: 400 }
+      );
+    }
+
+    // Validación 2: Máximo 3 pacientes por hora (solo clínica)
+    if (tipo === "clinica") {
+      const horaAgrupada = agruparHora(horaDesde);
+      const { data: enHora } = await supabase
+        .from("registros")
+        .select("id, hora_desde")
+        .eq("email", email)
+        .eq("fecha", fecha)
+        .eq("tipo", "clinica");
+
+      if (enHora) {
+        const pacientesEnHora = enHora.filter(
+          (r: any) => agruparHora(r.hora_desde || "") === horaAgrupada
+        ).length;
+
+        if (pacientesEnHora >= 3) {
+          return NextResponse.json(
+            { error: `Hora ${horaAgrupada} llena (máximo 3 pacientes)` },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     const tipoNormalizado =
       tipo === "clinica"
         ? "clinica"
@@ -43,13 +98,6 @@ export async function POST(request: NextRequest) {
       hora_hasta: horaHasta,
       observaciones,
     };
-
-    if (!supabase) {
-      return NextResponse.json(
-        { error: "Base de datos no configurada" },
-        { status: 500 }
-      );
-    }
 
     console.log("Intentando insertar registro:", registro);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 interface AuthData {
@@ -55,6 +55,7 @@ export default function AdminDashboard() {
   // Pacientes form
   const [newPaciente, setNewPaciente] = useState({ nombre: "", apellido: "", lesion: "", tipo: "clinica", sesiones: 10 });
   const [loadingPaciente, setLoadingPaciente] = useState(false);
+  const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const data = localStorage.getItem("panelAuth");
@@ -194,36 +195,78 @@ export default function AdminDashboard() {
     }
   };
 
+  const agruparHora = (horaDesde: string): string => {
+    if (!horaDesde) return "";
+    const [horas, minutos] = horaDesde.split(":").map(Number);
+    const minInt = minutos || 0;
+    const horaAgrupada = minInt >= 40 ? horas + 1 : horas;
+    return `${String(horaAgrupada).padStart(2, "0")}:00`;
+  };
+
   const calcularPagos = () => {
-    const porUsuario = new Map<string, { sesiones: number; domicilios: number }>();
+    const detallesPorUsuario = new Map<string, Array<{ fecha: string; hora: string; pacientes: number; precio: number }>>();
 
     registros.forEach((reg) => {
-      if (!porUsuario.has(reg.email)) {
-        porUsuario.set(reg.email, { sesiones: 0, domicilios: 0 });
-      }
-      const data = porUsuario.get(reg.email)!;
-      if (reg.tipo === "clinica") {
-        data.sesiones++;
-      } else {
-        data.domicilios++;
+      if (!detallesPorUsuario.has(reg.email)) {
+        detallesPorUsuario.set(reg.email, []);
       }
     });
 
-    return Array.from(porUsuario.entries()).map(([email, { sesiones, domicilios }]) => {
+    detallesPorUsuario.forEach((_, email) => {
+      const regsDelUsuario = registros.filter((r) => r.email === email);
+      const usuario = usuarios.find((u) => u.email === email);
+      const esSocio = usuario?.rol === "Socio";
+      const porFechaHora = new Map<string, Registro[]>();
+
+      regsDelUsuario.forEach((reg) => {
+        let key = "";
+        if (reg.tipo === "clinica" && reg.hora_desde) {
+          const horaAg = agruparHora(reg.hora_desde);
+          key = `${reg.fecha}|${horaAg}`;
+        } else {
+          key = `${reg.fecha}|domicilio`;
+        }
+
+        if (!porFechaHora.has(key)) {
+          porFechaHora.set(key, []);
+        }
+        porFechaHora.get(key)!.push(reg);
+      });
+
+      const detalles: Array<{ fecha: string; hora: string; pacientes: number; precio: number }> = [];
+
+      porFechaHora.forEach((regsEnHora, key) => {
+        const [fecha, hora] = key.split("|");
+        const cantPacientes = regsEnHora.length;
+        let precio = 0;
+
+        if (esSocio) {
+          precio = cantPacientes * 350;
+        } else if (hora === "domicilio") {
+          precio = cantPacientes === 1 ? 700 : 1000;
+        } else {
+          if (cantPacientes >= 3) precio = 550;
+          else if (cantPacientes === 2) precio = 500;
+          else precio = 250;
+        }
+
+        detalles.push({ fecha, hora, pacientes: cantPacientes, precio });
+      });
+
+      detallesPorUsuario.set(email, detalles);
+    });
+
+    return Array.from(detallesPorUsuario.entries()).map(([email, detalles]) => {
       const usuario = usuarios.find((u) => u.email === email);
       const tipo = usuario?.rol === "Socio" ? "Socio" : "Fisio";
-      const monto =
-        tipo === "Socio"
-          ? sesiones * 350 + domicilios * 350
-          : sesiones * 250 + domicilios * (domicilios === 1 ? 700 : 1000);
+      const monto = detalles.reduce((sum, d) => sum + d.precio, 0);
 
       return {
         email,
         nombre: usuario?.nombre || email,
         tipo,
-        sesiones,
-        domicilios,
         monto,
+        detalles,
       };
     });
   };
@@ -470,11 +513,11 @@ export default function AdminDashboard() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b-2 border-gray-200 bg-[#eef4f6]">
+                    <th className="text-center p-3 w-8"></th>
                     <th className="text-left p-3 text-[#0f5c4d] font-semibold">Nombre</th>
                     <th className="text-left p-3 text-[#0f5c4d] font-semibold">Tipo</th>
-                    <th className="text-center p-3 text-[#0f5c4d] font-semibold">Clínica</th>
-                    <th className="text-center p-3 text-[#0f5c4d] font-semibold">Domicilio</th>
                     <th className="text-left p-3 text-[#0f5c4d] font-semibold">Total</th>
+                    <th className="text-center p-3 text-[#0f5c4d] font-semibold">Detalles</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -487,35 +530,54 @@ export default function AdminDashboard() {
                   ) : (
                     <>
                       {pagos.map((pago) => (
-                        <tr key={pago.email} className="border-b border-gray-200 hover:bg-gray-50">
-                          <td className="p-3 font-semibold text-[#0f5c4d]">
-                            {pago.nombre}
-                          </td>
-                          <td className="p-3">
-                            <span
-                              className={`text-xs font-semibold px-2 py-1 rounded ${
-                                pago.tipo === "Fisio"
-                                  ? "bg-blue-100 text-blue-700"
-                                  : "bg-purple-100 text-purple-700"
-                              }`}
-                            >
-                              {pago.tipo}
-                            </span>
-                          </td>
-                          <td className="p-3 text-center">{pago.sesiones}</td>
-                          <td className="p-3 text-center">{pago.domicilios}</td>
-                          <td className="p-3 font-semibold text-[#0f5c4d]">
-                            ${pago.monto.toLocaleString()}
-                          </td>
-                        </tr>
+                        <React.Fragment key={pago.email}>
+                          <tr className="border-b border-gray-200 hover:bg-gray-50">
+                            <td className="p-3 text-center cursor-pointer" onClick={() => { const n = new Set(expandidos); n.has(pago.email) ? n.delete(pago.email) : n.add(pago.email); setExpandidos(n); }}>
+                              {expandidos.has(pago.email) ? "▼" : "▶"}
+                            </td>
+                            <td className="p-3 font-semibold text-[#0f5c4d]">
+                              {pago.nombre}
+                            </td>
+                            <td className="p-3">
+                              <span className={`text-xs font-semibold px-2 py-1 rounded ${pago.tipo === "Fisio" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"}`}>
+                                {pago.tipo}
+                              </span>
+                            </td>
+                            <td className="p-3 font-semibold text-[#0f5c4d]">
+                              ${pago.monto.toLocaleString()}
+                            </td>
+                            <td className="p-3 text-center">
+                              <button onClick={() => { const n = new Set(expandidos); n.has(pago.email) ? n.delete(pago.email) : n.add(pago.email); setExpandidos(n); }} className="text-xs bg-[#0f5c4d] text-white px-2 py-1 rounded hover:opacity-90">
+                                Ver detalles
+                              </button>
+                            </td>
+                          </tr>
+                          {expandidos.has(pago.email) && (
+                            <tr className="bg-gray-50 border-b border-gray-200">
+                              <td colSpan={5} className="p-4">
+                                <div className="text-sm space-y-1">
+                                  <div className="font-semibold text-[#0f5c4d] mb-2">Desglose por hora:</div>
+                                  {pago.detalles && pago.detalles.map((d, i) => (
+                                    <div key={i} className="flex justify-between bg-white p-2 rounded text-xs border-l-2 border-[#0f5c4d]">
+                                      <span>{d.fecha} - {d.hora}</span>
+                                      <span>{d.pacientes} paciente{d.pacientes !== 1 ? "s" : ""}</span>
+                                      <span className="font-semibold text-[#0f5c4d]">${d.precio.toLocaleString()}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       ))}
                       <tr className="bg-[#eef4f6] font-bold border-t-2 border-gray-200">
-                        <td colSpan={4} className="p-3 text-right text-[#0f5c4d]">
+                        <td colSpan={3} className="p-3 text-right text-[#0f5c4d]">
                           Total mes:
                         </td>
                         <td className="p-3 text-[#0f5c4d]">
                           ${totalPagar.toLocaleString()}
                         </td>
+                        <td></td>
                       </tr>
                     </>
                   )}
