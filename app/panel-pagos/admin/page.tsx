@@ -222,9 +222,11 @@ export default function AdminDashboard() {
         let key = "";
         if (reg.tipo === "clinica" && reg.hora_desde) {
           const horaAg = agruparHora(reg.hora_desde);
-          key = `${reg.fecha}|${horaAg}`;
-        } else {
-          key = `${reg.fecha}|domicilio`;
+          key = `${reg.fecha}|clinica|${horaAg}`;
+        } else if (reg.tipo === "domicilio_a") {
+          key = `${reg.fecha}|domicilio_a`;
+        } else if (reg.tipo === "domicilio_b") {
+          key = `${reg.fecha}|domicilio_b`;
         }
 
         if (!porFechaHora.has(key)) {
@@ -236,18 +238,26 @@ export default function AdminDashboard() {
       const detalles: Array<{ fecha: string; hora: string; pacientes: number; precio: number }> = [];
 
       porFechaHora.forEach((regsEnHora, key) => {
-        const [fecha, hora] = key.split("|");
+        const [fecha, ...resto] = key.split("|");
         const cantPacientes = regsEnHora.length;
         let precio = 0;
+        let hora = "";
 
-        if (esSocio) {
-          precio = cantPacientes * 350;
-        } else if (hora === "domicilio") {
-          precio = cantPacientes === 1 ? 700 : 1000;
-        } else {
-          if (cantPacientes >= 3) precio = 550;
-          else if (cantPacientes === 2) precio = 500;
-          else precio = 250;
+        if (resto[0] === "clinica") {
+          hora = resto[1];
+          if (esSocio) {
+            precio = cantPacientes * 350;
+          } else {
+            if (cantPacientes >= 3) precio = 550;
+            else if (cantPacientes === 2) precio = 500;
+            else precio = 250;
+          }
+        } else if (resto[0] === "domicilio_a") {
+          hora = "Domicilio A";
+          precio = esSocio ? cantPacientes * 350 : 700;
+        } else if (resto[0] === "domicilio_b") {
+          hora = "Domicilio B";
+          precio = esSocio ? cantPacientes * 350 : 1000;
         }
 
         detalles.push({ fecha, hora, pacientes: cantPacientes, precio });
