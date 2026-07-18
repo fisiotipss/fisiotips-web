@@ -58,29 +58,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validación 2: Máximo 3 pacientes por hora (solo clínica)
-    if (tipo === "clinica") {
-      const horaAgrupada = agruparHora(horaDesde);
-      const { data: enHora } = await supabase
-        .from("registros")
-        .select("id, hora_desde")
-        .eq("email", email)
-        .eq("fecha", fecha)
-        .eq("tipo", "clinica");
-
-      if (enHora) {
-        const pacientesEnHora = enHora.filter(
-          (r: any) => agruparHora(r.hora_desde || "") === horaAgrupada
-        ).length;
-
-        if (pacientesEnHora >= 3) {
-          return NextResponse.json(
-            { error: `Hora ${horaAgrupada} llena (máximo 3 pacientes)` },
-            { status: 400 }
-          );
-        }
-      }
-    }
 
     const tipoNormalizado =
       tipo === "clinica"
