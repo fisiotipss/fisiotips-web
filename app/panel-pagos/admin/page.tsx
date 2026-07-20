@@ -45,7 +45,7 @@ export default function AdminDashboard() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [mes, setMes] = useState("2026-07");
-  const [tab, setTab] = useState<"atenciones" | "pagos" | "usuarios" | "pacientes" | "cargar-paciente">("atenciones");
+  const [tab, setTab] = useState<"atenciones" | "pagos" | "usuarios" | "pacientes" | "cargar-paciente" | "cargar-usuario">("atenciones");
   const [changePassModal, setChangePassModal] = useState<{ email: string; nombre: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [editModal, setEditModal] = useState<Usuario | null>(null);
@@ -55,6 +55,9 @@ export default function AdminDashboard() {
   // Pacientes form
   const [newPaciente, setNewPaciente] = useState({ nombre: "", apellido: "", lesion: "", tipo: "clinica", sesiones: 10 });
   const [loadingPaciente, setLoadingPaciente] = useState(false);
+  // Usuarios form
+  const [newUsuario, setNewUsuario] = useState({ email: "", nombre: "", rol: "Fisio", password: "", telefono: "", banco: "", nro_cuenta: "", sucursal: "" });
+  const [loadingUsuario, setLoadingUsuario] = useState(false);
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -175,6 +178,40 @@ export default function AdminDashboard() {
       alert("Error al agregar paciente");
     } finally {
       setLoadingPaciente(false);
+    }
+  };
+
+  const handleAgregarUsuario = async () => {
+    if (!newUsuario.email.trim() || !newUsuario.nombre.trim() || !newUsuario.password.trim()) {
+      alert("Email, nombre y contraseña requeridos");
+      return;
+    }
+
+    setLoadingUsuario(true);
+    try {
+      const res = await fetch("/api/panel-pagos/usuarios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: newUsuario.email,
+          nombre: newUsuario.nombre,
+          rol: newUsuario.rol,
+          password: newUsuario.password,
+        }),
+      });
+
+      if (res.ok) {
+        alert("Usuario agregado correctamente");
+        setNewUsuario({ email: "", nombre: "", rol: "Fisio", password: "", telefono: "", banco: "", nro_cuenta: "", sucursal: "" });
+        cargarDatos();
+      } else {
+        alert("Error al agregar usuario");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error al agregar usuario");
+    } finally {
+      setLoadingUsuario(false);
     }
   };
 
@@ -402,6 +439,16 @@ export default function AdminDashboard() {
             }`}
           >
             ➕ Agregar Paciente
+          </button>
+          <button
+            onClick={() => setTab("cargar-usuario")}
+            className={`pb-3 px-4 font-medium text-sm transition whitespace-nowrap ${
+              tab === "cargar-usuario"
+                ? "text-[#0f5c4d] border-b-2 border-[#0f5c4d]"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            ➕ Agregar Usuario
           </button>
         </div>
 
@@ -761,6 +808,108 @@ export default function AdminDashboard() {
                 className="w-full bg-[#2563eb] text-white font-medium py-2.5 rounded-md hover:opacity-90 disabled:opacity-50"
               >
                 {loadingPaciente ? "Agregando..." : "Agregar Paciente"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {tab === "cargar-usuario" && (
+          <div className="bg-white rounded-lg border border-gray-200 p-6 max-w-2xl">
+            <h2 className="text-lg font-bold text-[#0f5c4d] mb-6">Agregar Usuario</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={newUsuario.email}
+                  onChange={(e) => setNewUsuario({ ...newUsuario, email: e.target.value })}
+                  placeholder="ejemplo@email.com"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
+                  Nombre
+                </label>
+                <input
+                  type="text"
+                  value={newUsuario.nombre}
+                  onChange={(e) => setNewUsuario({ ...newUsuario, nombre: e.target.value })}
+                  placeholder="Ej: Juan"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
+                  Rol
+                </label>
+                <select
+                  value={newUsuario.rol}
+                  onChange={(e) => setNewUsuario({ ...newUsuario, rol: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                >
+                  <option value="Fisio">Fisio</option>
+                  <option value="Socio">Socio</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
+                  Contraseña
+                </label>
+                <input
+                  type="password"
+                  value={newUsuario.password}
+                  onChange={(e) => setNewUsuario({ ...newUsuario, password: e.target.value })}
+                  placeholder="Contraseña segura"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
+                  Teléfono (Opcional)
+                </label>
+                <input
+                  type="tel"
+                  value={newUsuario.telefono}
+                  onChange={(e) => setNewUsuario({ ...newUsuario, telefono: e.target.value })}
+                  placeholder="+54 9 1234 5678"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
+                    Banco (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={newUsuario.banco}
+                    onChange={(e) => setNewUsuario({ ...newUsuario, banco: e.target.value })}
+                    placeholder="Ej: Banco XYZ"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#0f5c4d] mb-2">
+                    Nro. Cuenta (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={newUsuario.nro_cuenta}
+                    onChange={(e) => setNewUsuario({ ...newUsuario, nro_cuenta: e.target.value })}
+                    placeholder="1234567890"
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={handleAgregarUsuario}
+                disabled={loadingUsuario}
+                className="w-full bg-[#2563eb] text-white font-medium py-2.5 rounded-md hover:opacity-90 disabled:opacity-50"
+              >
+                {loadingUsuario ? "Agregando..." : "Agregar Usuario"}
               </button>
             </div>
           </div>
