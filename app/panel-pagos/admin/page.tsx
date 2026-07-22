@@ -225,10 +225,10 @@ export default function AdminDashboard() {
     : registros;
 
   const obtenerResumenPaciente = () => {
-    if (!pacienteSeleccionado) return null;
+    if (!pacienteSeleccionado || registrosFiltrados.length === 0) return null;
     const sesiones = registrosFiltrados.length;
     const usuariosUnicos = new Set(registrosFiltrados.map((r) => r.email));
-    const ultimaFecha = registrosFiltrados.length > 0 ? registrosFiltrados[0].fecha : "";
+    const ultimaFecha = registrosFiltrados[0].fecha;
     const sesionesporUsuario = Array.from(usuariosUnicos).map((email) => {
       const count = registrosFiltrados.filter((r) => r.email === email).length;
       return { email, nombre: getNombreUsuario(email), count };
