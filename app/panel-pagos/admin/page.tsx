@@ -45,6 +45,7 @@ export default function AdminDashboard() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [mes, setMes] = useState("2026-07");
+  const [pacienteSeleccionado, setPacienteSeleccionado] = useState("");
   const [tab, setTab] = useState<"atenciones" | "pagos" | "usuarios" | "pacientes" | "cargar-paciente" | "cargar-usuario">("atenciones");
   const [changePassModal, setChangePassModal] = useState<{ email: string; nombre: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
@@ -217,6 +218,23 @@ export default function AdminDashboard() {
 
   const getNombreUsuario = (email: string) => {
     return usuarios.find((u) => u.email === email)?.nombre || email;
+  };
+
+  const registrosFiltrados = pacienteSeleccionado
+    ? registros.filter((r) => r.paciente === pacienteSeleccionado)
+    : registros;
+
+  const obtenerResumenPaciente = () => {
+    if (!pacienteSeleccionado) return null;
+    const sesiones = registrosFiltrados.length;
+    const usuariosUnicos = new Set(registrosFiltrados.map((r) => r.email));
+    const ultimaFecha = registrosFiltrados.length > 0 ? registrosFiltrados[0].fecha : "";
+    const sesionesporUsuario = Array.from(usuariosUnicos).map((email) => {
+      const count = registrosFiltrados.filter((r) => r.email === email).length;
+      return { email, nombre: getNombreUsuario(email), count };
+    });
+
+    return { sesiones, ultimaFecha, sesionesporUsuario };
   };
 
   const getTipoLabel = (tipo: string) => {
@@ -454,7 +472,7 @@ export default function AdminDashboard() {
 
         {tab === "atenciones" && (
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
               <div className="flex gap-3">
                 <h2 className="text-lg font-bold text-[#0f5c4d]">
                   Atenciones registradas
@@ -469,13 +487,58 @@ export default function AdminDashboard() {
                   </button>
                 )}
               </div>
-              <input
-                type="month"
-                value={mes}
-                onChange={(e) => setMes(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-              />
+              <div className="flex gap-2">
+                <select
+                  value={pacienteSeleccionado}
+                  onChange={(e) => setPacienteSeleccionado(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="">Todos los pacientes</option>
+                  {pacientes.map((p) => (
+                    <option key={p.id} value={`${p.nombre} ${p.apellido}`}>
+                      {p.nombre} {p.apellido}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="month"
+                  value={mes}
+                  onChange={(e) => setMes(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
             </div>
+
+            {pacienteSeleccionado && obtenerResumenPaciente() && (
+              <div className="bg-gradient-to-r from-[#0f5c4d] to-[#0a4239] text-white rounded-lg p-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs opacity-90">Paciente</p>
+                    <p className="text-lg font-bold">{pacienteSeleccionado}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs opacity-90">Total sesiones</p>
+                    <p className="text-lg font-bold">{obtenerResumenPaciente()?.sesiones || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs opacity-90">Última sesión</p>
+                    <p className="text-lg font-bold">{obtenerResumenPaciente()?.ultimaFecha || "-"}</p>
+                  </div>
+                </div>
+                {obtenerResumenPaciente()?.sesionesporUsuario && (
+                  <div className="mt-4 text-sm">
+                    <p className="text-xs opacity-90 mb-2">Sesiones por usuario:</p>
+                    <div className="space-y-1">
+                      {obtenerResumenPaciente()?.sesionesporUsuario.map((u) => (
+                        <span key={u.email} className="inline-block bg-white bg-opacity-20 px-2 py-1 rounded mr-2">
+                          {u.nombre}: {u.count}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -484,10 +547,10 @@ export default function AdminDashboard() {
                     <th className="text-center p-3 w-8">
                       <input
                         type="checkbox"
-                        checked={seleccionados.size === registros.length && registros.length > 0}
+                        checked={seleccionados.size === registrosFiltrados.length && registrosFiltrados.length > 0}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSeleccionados(new Set(registros.map((r) => r.id)));
+                            setSeleccionados(new Set(registrosFiltrados.map((r) => r.id)));
                           } else {
                             setSeleccionados(new Set());
                           }
@@ -503,14 +566,14 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {registros.length === 0 ? (
+                  {registrosFiltrados.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="p-3 text-center text-gray-600">
-                        No hay atenciones registradas para este mes
+                        No hay atenciones registradas {pacienteSeleccionado ? `para ${pacienteSeleccionado}` : "para este mes"}
                       </td>
                     </tr>
                   ) : (
-                    registros.map((reg) => (
+                    registrosFiltrados.map((reg) => (
                       <tr key={reg.id} className="border-b border-gray-200 hover:bg-gray-50">
                         <td className="p-3 text-center">
                           <input
