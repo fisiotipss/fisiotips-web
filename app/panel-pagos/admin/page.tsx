@@ -81,7 +81,7 @@ export default function AdminDashboard() {
     if (!auth) return;
     const interval = setInterval(() => {
       cargarDatos();
-    }, 5000);
+    }, 1000);
     return () => clearInterval(interval);
   }, [auth]);
 
