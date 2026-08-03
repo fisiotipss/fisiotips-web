@@ -41,4 +41,9 @@ export const videos: VideoCaso[] = [
     embedUrl: "https://drive.google.com/file/d/1UwHN9AgBqyO86KUGif0BkDHF9LqFpzY6/preview",
     thumbnail: "/images/video-desgarro-pierna.jpg",
   },
+  {
+    titulo: "Penso que la solucion era el reposo y esperar/dolor de rodilla",
+    embedUrl: "https://drive.google.com/file/d/1Dxp1Su8eEzEYZRZn845W05iRwlK4NF9J/preview",
+    thumbnail: "https://drive.google.com/thumbnail?id=1Dxp1Su8eEzEYZRZn845W05iRwlK4NF9J&sz=w320",
+  },
 ];
