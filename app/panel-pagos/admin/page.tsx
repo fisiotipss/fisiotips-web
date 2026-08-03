@@ -82,14 +82,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!auth) return;
     const interval = setInterval(() => {
-      const ahora = Date.now();
-      const tiempoDesdeUltimaCarga = ahora - ultimaCarguaManual;
-      if (tiempoDesdeUltimaCarga > 2000) {
-        cargarDatos();
-      }
-    }, 1000);
+      cargarDatos();
+    }, 5000);
     return () => clearInterval(interval);
-  }, [auth, cargarDatos, ultimaCarguaManual]);
+  }, [auth, cargarDatos]);
 
   const cargarDatos = React.useCallback(async () => {
     try {
