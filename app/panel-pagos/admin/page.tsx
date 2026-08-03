@@ -220,9 +220,9 @@ export default function AdminDashboard() {
     return usuarios.find((u) => u.email === email)?.nombre || email;
   };
 
-  const registrosFiltrados = pacienteSeleccionado
-    ? registros.filter((r) => r.paciente === pacienteSeleccionado)
-    : registros;
+  const registrosFiltrados = registros
+    .filter((r) => String(r.fecha || "").startsWith(mes))
+    .filter((r) => pacienteSeleccionado ? r.paciente === pacienteSeleccionado : true);
 
   const obtenerResumenPaciente = () => {
     if (!pacienteSeleccionado || registrosFiltrados.length === 0) return null;
