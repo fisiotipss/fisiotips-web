@@ -259,16 +259,17 @@ export default function AdminDashboard() {
   };
 
   const calcularPagos = () => {
+    const registrosMes = registros.filter((r) => r.fecha.startsWith(mes));
     const detallesPorUsuario = new Map<string, Array<{ fecha: string; hora: string; pacientes: number; precio: number }>>();
 
-    registros.forEach((reg) => {
+    registrosMes.forEach((reg) => {
       if (!detallesPorUsuario.has(reg.email)) {
         detallesPorUsuario.set(reg.email, []);
       }
     });
 
     detallesPorUsuario.forEach((_, email) => {
-      const regsDelUsuario = registros.filter((r) => r.email === email);
+      const regsDelUsuario = registrosMes.filter((r) => r.email === email);
       const usuario = usuarios.find((u) => u.email === email);
       const esSocio = usuario?.rol === "Socio";
       const porFechaHora = new Map<string, Registro[]>();
