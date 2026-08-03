@@ -44,7 +44,7 @@ export default function AdminDashboard() {
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [mes, setMes] = useState(new Date().toISOString().slice(0, 7));
+  const [mes, setMes] = useState("2026-07");
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState("");
   const [tab, setTab] = useState<"atenciones" | "pagos" | "usuarios" | "pacientes" | "cargar-paciente" | "cargar-usuario">("atenciones");
   const [changePassModal, setChangePassModal] = useState<{ email: string; nombre: string } | null>(null);
@@ -259,7 +259,7 @@ export default function AdminDashboard() {
   };
 
   const calcularPagos = () => {
-    const registrosMes = registros.filter((r) => String(r.fecha || "").startsWith(mes));
+    const registrosMes = registros.filter((r) => r.fecha.startsWith(mes));
     const detallesPorUsuario = new Map<string, Array<{ fecha: string; hora: string; pacientes: number; precio: number }>>();
 
     registrosMes.forEach((reg) => {

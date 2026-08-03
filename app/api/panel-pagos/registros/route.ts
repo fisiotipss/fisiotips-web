@@ -158,10 +158,7 @@ export async function GET(request: NextRequest) {
     // Filtrar por mes en código
     let filteredData = data || [];
     if (mes) {
-      filteredData = filteredData.filter((r: any) => {
-        const fecha = String(r.fecha || "");
-        return fecha.startsWith(mes);
-      });
+      filteredData = filteredData.filter((r: any) => r.fecha?.startsWith(mes));
     }
 
     return NextResponse.json({ data: filteredData });
