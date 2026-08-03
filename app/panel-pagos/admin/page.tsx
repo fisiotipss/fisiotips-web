@@ -45,7 +45,7 @@ export default function AdminDashboard() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState("");
-  const [mes, setMes] = useState("2026-07");
+  const [_, rerender] = useState(0);
   const mesRef = React.useRef("2026-07");
   const [tab, setTab] = useState<"atenciones" | "pagos" | "usuarios" | "pacientes" | "cargar-paciente" | "cargar-usuario">("atenciones");
   const [changePassModal, setChangePassModal] = useState<{ email: string; nombre: string } | null>(null);
@@ -259,17 +259,16 @@ export default function AdminDashboard() {
   };
 
   const calcularPagos = () => {
-    const registrosMes = registros.filter((r) => r.fecha.startsWith(mes));
     const detallesPorUsuario = new Map<string, Array<{ fecha: string; hora: string; pacientes: number; precio: number }>>();
 
-    registrosMes.forEach((reg) => {
+    registros.forEach((reg) => {
       if (!detallesPorUsuario.has(reg.email)) {
         detallesPorUsuario.set(reg.email, []);
       }
     });
 
     detallesPorUsuario.forEach((_, email) => {
-      const regsDelUsuario = registrosMes.filter((r) => r.email === email);
+      const regsDelUsuario = registros.filter((r) => r.email === email);
       const usuario = usuarios.find((u) => u.email === email);
       const esSocio = usuario?.rol === "Socio";
       const porFechaHora = new Map<string, Registro[]>();
@@ -618,10 +617,10 @@ export default function AdminDashboard() {
               </h2>
               <input
                 type="month"
-                value={mes}
+                value={mesRef.current}
                 onChange={(e) => {
                   mesRef.current = e.target.value;
-                  setMes(e.target.value);
+                  rerender(Date.now());
                   cargarDatos();
                 }}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm"

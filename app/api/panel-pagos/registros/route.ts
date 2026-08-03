@@ -157,14 +157,18 @@ export async function GET(request: NextRequest) {
 
     // Filtrar por mes en código
     let filteredData = data || [];
+    console.log(`[API] Params - email: ${email}, mes: ${mes}, allUsers: ${allUsers}`);
+    console.log(`[API] Total registros sin filtrar: ${filteredData.length}`);
+
+    if (filteredData.length > 0) {
+      console.log(`[API] Muestras de fechas en BD:`, filteredData.slice(0, 3).map(r => r.fecha));
+    }
+
     if (mes && mes.trim()) {
-      console.log(`[API] Filtering by mes: ${mes}, total registros: ${filteredData.length}`);
+      console.log(`[API] Filtering by mes: ${mes}`);
       filteredData = filteredData.filter((r: any) => {
         const fecha = String(r.fecha || "");
         const match = fecha.startsWith(mes);
-        if (!match) {
-          console.log(`[API] No match: fecha=${fecha}, mes=${mes}`);
-        }
         return match;
       });
       console.log(`[API] After filter: ${filteredData.length} registros`);
