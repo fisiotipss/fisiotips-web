@@ -44,8 +44,9 @@ export default function AdminDashboard() {
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
-  const [mes, setMes] = useState("2026-07");
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState("");
+  const [mes, setMes] = useState("2026-07");
+  const mesRef = React.useRef("2026-07");
   const [tab, setTab] = useState<"atenciones" | "pagos" | "usuarios" | "pacientes" | "cargar-paciente" | "cargar-usuario">("atenciones");
   const [changePassModal, setChangePassModal] = useState<{ email: string; nombre: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
@@ -75,7 +76,7 @@ export default function AdminDashboard() {
     if (auth) {
       cargarDatos();
     }
-  }, [auth, mes, cargarDatos]);
+  }, [auth, cargarDatos]);
 
   useEffect(() => {
     if (!auth) return;
@@ -88,7 +89,7 @@ export default function AdminDashboard() {
   const cargarDatos = React.useCallback(async () => {
     try {
       const [regRes, usuRes, pacRes] = await Promise.all([
-        fetch(`/api/panel-pagos/registros?mes=${mes}&allUsers=true`),
+        fetch(`/api/panel-pagos/registros?mes=${mesRef.current}&allUsers=true`),
         fetch("/api/panel-pagos/usuarios"),
         fetch("/api/panel-pagos/pacientes"),
       ]);
@@ -108,7 +109,7 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error cargando datos:", error);
     }
-  }, [mes]);
+  }, []);
 
   const handleChangePassword = async (email: string) => {
     if (!newPassword.trim()) return;
@@ -500,15 +501,6 @@ export default function AdminDashboard() {
                     </option>
                   ))}
                 </select>
-                <input
-                  type="month"
-                  value={mes}
-                  onChange={(e) => {
-                    console.log("Mes cambió de:", mes, "a:", e.target.value);
-                    setMes(e.target.value);
-                  }}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-                />
               </div>
             </div>
 
@@ -627,7 +619,11 @@ export default function AdminDashboard() {
               <input
                 type="month"
                 value={mes}
-                onChange={(e) => setMes(e.target.value)}
+                onChange={(e) => {
+                  mesRef.current = e.target.value;
+                  setMes(e.target.value);
+                  cargarDatos();
+                }}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm"
               />
             </div>
