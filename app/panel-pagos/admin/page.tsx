@@ -78,11 +78,12 @@ export default function AdminDashboard() {
   }, [mes, auth]);
 
   useEffect(() => {
+    if (!auth) return;
     const interval = setInterval(() => {
-      if (auth) cargarDatos();
-    }, 2000);
+      cargarDatos();
+    }, 5000);
     return () => clearInterval(interval);
-  }, [auth, mes]);
+  }, [auth]);
 
   const cargarDatos = async () => {
     try {
