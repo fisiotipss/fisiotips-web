@@ -39,7 +39,7 @@ export const videos: VideoCaso[] = [
   {
     titulo: "Desgarro/ardor en la pierna, sin respuesta",
     embedUrl: "https://drive.google.com/file/d/1UwHN9AgBqyO86KUGif0BkDHF9LqFpzY6/preview",
-    thumbnail: "/images/video-desgarro-pierna.jpg",
+    thumbnail: "https://drive.google.com/thumbnail?id=1UwHN9AgBqyO86KUGif0BkDHF9LqFpzY6&sz=w320",
   },
   {
     titulo: "Penso que la solucion era el reposo y esperar/dolor de rodilla",
