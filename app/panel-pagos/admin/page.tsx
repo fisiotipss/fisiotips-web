@@ -83,7 +83,7 @@ export default function AdminDashboard() {
       cargarDatos();
     }, 1000);
     return () => clearInterval(interval);
-  }, [auth]);
+  }, [auth, mes, cargarDatos]);
 
   const cargarDatos = async () => {
     try {
