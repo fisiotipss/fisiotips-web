@@ -36,4 +36,9 @@ export const videos: VideoCaso[] = [
     embedUrl: "https://drive.google.com/file/d/1c5shB3Fk2BEo2TV-eY9BmPy4QoJUYNlp/preview",
     thumbnail: "/images/video-rodilla-cronica.jpg",
   },
+  {
+    titulo: "Desgarro/ardor en la pierna, sin respuesta",
+    embedUrl: "https://drive.google.com/file/d/1UwHN9AgBqyO86KUGif0BkDHF9LqFpzY6/preview",
+    thumbnail: "/images/video-desgarro-pierna.jpg",
+  },
 ];
