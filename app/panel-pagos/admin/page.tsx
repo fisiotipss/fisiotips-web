@@ -47,6 +47,7 @@ export default function AdminDashboard() {
   const [mes, setMes] = useState("2026-07");
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState("");
   const [tab, setTab] = useState<"atenciones" | "pagos" | "usuarios" | "pacientes" | "cargar-paciente" | "cargar-usuario">("atenciones");
+  const [ultimaCarguaManual, setUltimaCarguaManual] = useState(0);
   const [changePassModal, setChangePassModal] = useState<{ email: string; nombre: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [editModal, setEditModal] = useState<Usuario | null>(null);
@@ -73,6 +74,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (auth) {
+      setUltimaCarguaManual(Date.now());
       cargarDatos();
     }
   }, [mes, auth]);
@@ -80,10 +82,14 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!auth) return;
     const interval = setInterval(() => {
-      cargarDatos();
+      const ahora = Date.now();
+      const tiempoDesdeUltimaCarga = ahora - ultimaCarguaManual;
+      if (tiempoDesdeUltimaCarga > 2000) {
+        cargarDatos();
+      }
     }, 1000);
     return () => clearInterval(interval);
-  }, [auth, mes, cargarDatos]);
+  }, [auth, cargarDatos, ultimaCarguaManual]);
 
   const cargarDatos = React.useCallback(async () => {
     try {
