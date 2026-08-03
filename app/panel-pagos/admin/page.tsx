@@ -85,7 +85,7 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, [auth, mes, cargarDatos]);
 
-  const cargarDatos = async () => {
+  const cargarDatos = React.useCallback(async () => {
     try {
       const [regRes, usuRes, pacRes] = await Promise.all([
         fetch(`/api/panel-pagos/registros?mes=${mes}&allUsers=true`),
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error cargando datos:", error);
     }
-  };
+  }, [mes]);
 
   const handleChangePassword = async (email: string) => {
     if (!newPassword.trim()) return;
