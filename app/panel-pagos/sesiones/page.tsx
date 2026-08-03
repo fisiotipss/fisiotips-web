@@ -35,7 +35,7 @@ export default function SesionesPage() {
       cargarSesiones();
     }, 2000);
     return () => clearInterval(interval);
-  }, [email, mes]);
+  }, [email]);
 
   const cargarSesiones = async () => {
     try {
