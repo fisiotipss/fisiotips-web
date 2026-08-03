@@ -62,30 +62,6 @@ export default function AdminDashboard() {
   const [loadingUsuario, setLoadingUsuario] = useState(false);
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    const data = localStorage.getItem("panelAuth");
-    if (!data || JSON.parse(data).role !== "admin") {
-      router.push("/panel-pagos");
-    } else {
-      setAuth(JSON.parse(data));
-      cargarDatos();
-    }
-  }, [router]);
-
-  useEffect(() => {
-    if (auth) {
-      cargarDatos();
-    }
-  }, [auth, cargarDatos]);
-
-  useEffect(() => {
-    if (!auth) return;
-    const interval = setInterval(() => {
-      cargarDatos();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [auth, cargarDatos]);
-
   const cargarDatos = React.useCallback(async () => {
     try {
       const [regRes, usuRes, pacRes] = await Promise.all([
@@ -110,6 +86,30 @@ export default function AdminDashboard() {
       console.error("Error cargando datos:", error);
     }
   }, []);
+
+  useEffect(() => {
+    const data = localStorage.getItem("panelAuth");
+    if (!data || JSON.parse(data).role !== "admin") {
+      router.push("/panel-pagos");
+    } else {
+      setAuth(JSON.parse(data));
+      cargarDatos();
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (auth) {
+      cargarDatos();
+    }
+  }, [auth, cargarDatos]);
+
+  useEffect(() => {
+    if (!auth) return;
+    const interval = setInterval(() => {
+      cargarDatos();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [auth, cargarDatos]);
 
   const handleChangePassword = async (email: string) => {
     if (!newPassword.trim()) return;
