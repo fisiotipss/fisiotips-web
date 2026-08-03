@@ -170,7 +170,10 @@ export async function GET(request: NextRequest) {
       console.log(`[API] After filter: ${filteredData.length} registros`);
     }
 
-    return NextResponse.json({ data: filteredData });
+    return NextResponse.json({
+      data: filteredData,
+      debug: { mes, totalBeforeFilter: data?.length || 0, totalAfterFilter: filteredData.length }
+    });
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json({ data: [] });
