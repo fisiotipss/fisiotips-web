@@ -509,7 +509,10 @@ export default function AdminDashboard() {
                 <input
                   type="month"
                   value={mes}
-                  onChange={(e) => setMes(e.target.value)}
+                  onChange={(e) => {
+                    console.log("Mes cambió de:", mes, "a:", e.target.value);
+                    setMes(e.target.value);
+                  }}
                   className="px-3 py-2 border border-gray-300 rounded-md text-sm"
                 />
               </div>
