@@ -46,4 +46,9 @@ export const videos: VideoCaso[] = [
     embedUrl: "https://drive.google.com/file/d/1Dxp1Su8eEzEYZRZn845W05iRwlK4NF9J/preview",
     thumbnail: "https://drive.google.com/thumbnail?id=1Dxp1Su8eEzEYZRZn845W05iRwlK4NF9J&sz=w320",
   },
+  {
+    titulo: "Dolor de rodilla en artes marciales",
+    embedUrl: "https://drive.google.com/file/d/1gIqCQ7C3GNw3nox1ve2LBbAp3eji26Fe/preview",
+    thumbnail: "https://drive.google.com/thumbnail?id=1gIqCQ7C3GNw3nox1ve2LBbAp3eji26Fe&sz=w320",
+  },
 ];
