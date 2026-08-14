@@ -7,6 +7,7 @@ export const runtime = "nodejs";
 const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8 MB
 
 const processedRequests = new Map<string, number>();
+const ipRequests = new Map<string, number>();
 
 function deduplicateRequest(deduplicationId: string): boolean {
   const now = Date.now();
@@ -26,6 +27,24 @@ function deduplicateRequest(deduplicationId: string): boolean {
   return true;
 }
 
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const lastRequest = ipRequests.get(ip);
+
+  if (lastRequest && now - lastRequest < 60000) {
+    return false;
+  }
+
+  ipRequests.set(ip, now);
+
+  if (ipRequests.size > 500) {
+    const oldestKey = ipRequests.keys().next().value as string;
+    if (oldestKey) ipRequests.delete(oldestKey);
+  }
+
+  return true;
+}
+
 function campoTexto(formData: FormData, nombre: string) {
   const valor = formData.get(nombre);
   return typeof valor === "string" ? valor.trim() : "";
@@ -33,6 +52,15 @@ function campoTexto(formData: FormData, nombre: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: "Demasiadas solicitudes. Aguardá un minuto e intentá nuevamente." },
+        { status: 429 }
+      );
+    }
+
     const formData = await req.formData();
 
     const deduplicationId = formData.get("deduplication_id");

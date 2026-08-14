@@ -21,14 +21,21 @@ type Estado = "idle" | "enviando" | "error" | "redirigiendo";
 export default function ReservaForm() {
   const [estado, setEstado] = useState<Estado>("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [lastSubmitTime, setLastSubmitTime] = useState(0);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    const now = Date.now();
+    if (now - lastSubmitTime < 1000) {
+      return;
+    }
 
     if (estado !== "idle") {
       return;
     }
 
+    setLastSubmitTime(now);
     setEstado("enviando");
     setErrorMsg("");
 
