@@ -5,6 +5,7 @@ import { MercadoPagoConfig, Payment } from "mercadopago";
 export const runtime = "nodejs";
 
 const processedPayments = new Map<string, number>();
+const paymentsByPayer = new Map<string, Array<{ paymentId: string; time: number; amount: number }>>();
 
 function isPaymentAlreadyProcessed(paymentId: string): boolean {
   const now = Date.now();
@@ -22,6 +23,25 @@ function isPaymentAlreadyProcessed(paymentId: string): boolean {
   }
 
   return false;
+}
+
+function detectDuplicatePayment(payerId: string, amount: number): boolean {
+  const now = Date.now();
+  if (!paymentsByPayer.has(payerId)) {
+    paymentsByPayer.set(payerId, []);
+  }
+
+  const payerPayments = paymentsByPayer.get(payerId)!;
+  const recentDuplicate = payerPayments.some(
+    (p) => now - p.time < 600000 && Math.abs(p.amount - amount) < 1
+  );
+
+  if (!recentDuplicate) {
+    payerPayments.push({ paymentId: "", time: now, amount });
+    if (payerPayments.length > 10) payerPayments.shift();
+  }
+
+  return recentDuplicate;
 }
 
 // Mercado Pago llama a esta URL cada vez que cambia el estado de un pago en tu cuenta
@@ -49,17 +69,30 @@ export async function POST(req: NextRequest) {
     const info = await payment.get({ id: paymentId });
 
     if (info.status === "approved" && process.env.RESEND_API_KEY && process.env.NOTIFY_EMAIL) {
+      const payerId = info.payer?.email || "unknown";
+      const isDuplicate = detectDuplicatePayment(payerId, info.transaction_amount || 0);
+
       const resend = new Resend(process.env.RESEND_API_KEY);
+      const subject = isDuplicate
+        ? `⚠️ PAGO DUPLICADO DETECTADO — ${info.transaction_amount} ${info.currency_id}`
+        : `💰 Pago recibido — ${info.transaction_amount} ${info.currency_id}`;
+
+      const duplicateWarning = isDuplicate
+        ? `<p style="color: red;"><strong>⚠️ ALERTA:</strong> Este pago podría ser un duplicado del mismo usuario en los últimos 10 minutos.</p>`
+        : "";
+
       await resend.emails.send({
         from: process.env.RESEND_FROM || "Fisiotips <onboarding@resend.dev>",
         to: process.env.NOTIFY_EMAIL,
-        subject: `💰 Pago recibido — ${info.transaction_amount} ${info.currency_id}`,
+        subject,
         html: `
-          <h2>¡Pago confirmado!</h2>
+          <h2>${isDuplicate ? "⚠️ Pago Duplicado Detectado" : "¡Pago confirmado!"}</h2>
+          ${duplicateWarning}
           <p><strong>Monto:</strong> ${info.transaction_amount} ${info.currency_id}</p>
           <p><strong>Pagador:</strong> ${info.payer?.first_name || ""} ${info.payer?.last_name || ""} (${info.payer?.email || "sin email"})</p>
           <p><strong>Estado:</strong> ${info.status}</p>
           <p><strong>Fecha:</strong> ${info.date_approved || info.date_created}</p>
+          ${isDuplicate ? "<p style='color: red;'><strong>Verificar si este pago duplicado debe ser reembolsado.</strong></p>" : ""}
         `,
       });
     }

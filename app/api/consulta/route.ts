@@ -8,6 +8,7 @@ const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8 MB
 
 const processedRequests = new Map<string, number>();
 const ipRequests = new Map<string, number>();
+const activePendingPayments = new Map<string, number>();
 
 function deduplicateRequest(deduplicationId: string): boolean {
   const now = Date.now();
@@ -85,6 +86,7 @@ export async function POST(req: NextRequest) {
 
     const camposObligatorios: (keyof typeof datos)[] = [
       "nombre",
+      "telefonoEmergencia",
       "edad",
       "deporte",
       "ubicacion",
@@ -98,6 +100,23 @@ export async function POST(req: NextRequest) {
         { error: `Falta completar el campo "${faltante}".` },
         { status: 400 }
       );
+    }
+
+    const emailKey = datos.nombre.toLowerCase();
+    const now = Date.now();
+    const lastPayment = activePendingPayments.get(emailKey);
+
+    if (lastPayment && now - lastPayment < 300000) {
+      return NextResponse.json(
+        { error: "Ya hay un pago pendiente para este usuario. Esperá a que se procese o contactanos." },
+        { status: 429 }
+      );
+    }
+
+    activePendingPayments.set(emailKey, now);
+    if (activePendingPayments.size > 500) {
+      const oldestKey = activePendingPayments.keys().next().value as string;
+      if (oldestKey) activePendingPayments.delete(oldestKey);
     }
 
     const archivo = formData.get("estudios");
