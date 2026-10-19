@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import LogoMark from "@/components/LogoMark";
 
 export default function PanelLogin() {
@@ -57,7 +58,9 @@ export default function PanelLogin() {
       <div className="w-full max-w-[400px]">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-10">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-[#0f5c4d] mb-2">ReActive</h1>
+            <h1 className="text-2xl font-bold text-[#0f5c4d] mb-2">
+              <Link href="/reactive" className="hover:underline">ReActive</Link>
+            </h1>
             <p className="text-sm text-gray-600">Panel de control de sesiones</p>
           </div>
 
