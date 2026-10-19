@@ -31,22 +31,21 @@ const servicios = [
   },
 ];
 
-// Fotos de cada estudio: subir como public/reactive/estudio-ecografia.jpg, etc.
 const estudios = [
   {
     titulo: "Ecografía",
     texto: "Servicio tercerizado para acelerar tu diagnóstico.",
-    foto: "/reactive/estudio-ecografia.jpg",
+    foto: "/reactive/estudio-ecografia.png",
   },
   {
     titulo: "Resonancia",
     texto: "Servicio tercerizado para ver con precisión lo que necesitás.",
-    foto: "/reactive/estudio-resonancia.jpg",
+    foto: "/reactive/estudio-resonancia.png",
   },
   {
     titulo: "Tomografía",
     texto: "Servicio tercerizado para decidir el tratamiento sin esperas largas.",
-    foto: "/reactive/estudio-tomografia.jpg",
+    foto: "/reactive/estudio-tomografia.png",
   },
 ];
 
@@ -167,7 +166,7 @@ export default function ReActivePage() {
               <div
                 role="img"
                 aria-label={e.titulo}
-                className="h-40 w-full bg-cover bg-center bg-[#14213d]"
+                className="h-48 w-full bg-cover bg-center bg-[#14213d]"
                 style={{ backgroundImage: `url(${e.foto})` }}
               />
               <div className="p-5 text-center">
