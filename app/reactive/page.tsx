@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import ReservaForm from "@/components/ReservaForm";
+
+export const metadata: Metadata = {
+  title: "ReActive · Rehabilitación y entrenamiento",
+  description:
+    "Rehabilitación de lesiones musculoesqueléticas y entrenamiento personalizado para volver a entrenar como antes, con seguridad y confianza.",
+};
 
 const WHATSAPP = "https://w.app/reactive";
 const COMO_LLEGAR = "https://share.google/SMypT8x5LxhKU4H6N";
