@@ -184,3 +184,87 @@ export async function GET(request: NextRequest) {
   }
 }
 
+export async function DELETE(request: NextRequest) {
+  try {
+    if (!supabase) {
+      return NextResponse.json(
+        { error: "Base de datos no configurada" },
+        { status: 500 }
+      );
+    }
+
+    const id = request.nextUrl.searchParams.get("id");
+    const solicitante = (request.nextUrl.searchParams.get("email") || "").toLowerCase();
+    const rol = (request.nextUrl.searchParams.get("rol") || "").toLowerCase();
+
+    if (!id) {
+      return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+    }
+
+    const { data: registro, error: fetchError } = await supabase
+      .from("registros")
+      .select("id, email, paciente")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error("Error Supabase DELETE:", fetchError);
+      return NextResponse.json({ error: "Error al buscar la sesión" }, { status: 500 });
+    }
+
+    if (!registro) {
+      return NextResponse.json({ error: "Sesión no encontrada" }, { status: 404 });
+    }
+
+    // Solo el dueño de la sesión o un admin pueden borrarla
+    const esAdmin = rol === "admin";
+    if (!esAdmin && String(registro.email).toLowerCase() !== solicitante) {
+      return NextResponse.json(
+        { error: "Solo puedes eliminar tus propias sesiones" },
+        { status: 403 }
+      );
+    }
+
+    const { error: delError } = await supabase
+      .from("registros")
+      .delete()
+      .eq("id", id);
+
+    if (delError) {
+      console.error("Error Supabase DELETE:", delError);
+      return NextResponse.json({ error: "Error al eliminar la sesión" }, { status: 500 });
+    }
+
+    // Devolver 1 sesión disponible al paciente (nombre y apellido exactos)
+    const partes = String(registro.paciente || "").trim().split(/\s+/);
+    const nombre = partes[0] || "";
+    const apellido = partes.slice(1).join(" ");
+
+    let sesionDevuelta = false;
+    const { data: pacientes } = await supabase
+      .from("pacientes")
+      .select("id, sesiones_disponibles")
+      .eq("nombre", nombre)
+      .eq("apellido", apellido)
+      .limit(1);
+
+    if (pacientes && pacientes.length > 0) {
+      const pac = pacientes[0];
+      const { error: updError } = await supabase
+        .from("pacientes")
+        .update({ sesiones_disponibles: (pac.sesiones_disponibles || 0) + 1 })
+        .eq("id", pac.id);
+      sesionDevuelta = !updError;
+    }
+
+    return NextResponse.json({
+      success: true,
+      mensaje: "Sesión eliminada",
+      sesionDevuelta,
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    return NextResponse.json({ error: "Error al eliminar la sesión" }, { status: 500 });
+  }
+}
+

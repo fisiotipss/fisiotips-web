@@ -22,6 +22,9 @@ export default function SesionesPage() {
   const [loading, setLoading] = useState(true);
   const [mes, setMes] = useState(new Date().toISOString().slice(0, 7));
   const [expandido, setExpandido] = useState(false);
+  const [mostrarNuevo, setMostrarNuevo] = useState(false);
+  const [newPaciente, setNewPaciente] = useState({ nombre: "", apellido: "", lesion: "", tipo: "clinica", sesiones: 10 });
+  const [loadingPaciente, setLoadingPaciente] = useState(false);
 
   useEffect(() => {
     if (email) {
@@ -48,6 +51,63 @@ export default function SesionesPage() {
       console.error("Error cargando sesiones:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEliminar = async (id: string) => {
+    if (!confirm("¿Eliminar esta sesión? Se devolverá 1 sesión al paciente.")) return;
+
+    const auth = JSON.parse(localStorage.getItem("panelAuth") || "{}");
+    try {
+      const res = await fetch(
+        `/api/panel-pagos/registros?id=${id}&email=${encodeURIComponent(auth.email || "")}&rol=${encodeURIComponent(auth.role || "")}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "No se pudo eliminar la sesión");
+        return;
+      }
+      cargarSesiones();
+    } catch (error) {
+      console.error("Error eliminando sesión:", error);
+      alert("Error de conexión al eliminar la sesión");
+    }
+  };
+
+  const handleAgregarPaciente = async () => {
+    if (!newPaciente.nombre.trim() || !newPaciente.apellido.trim()) {
+      alert("Nombre y apellido requeridos");
+      return;
+    }
+
+    setLoadingPaciente(true);
+    try {
+      const res = await fetch("/api/panel-pagos/pacientes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: newPaciente.nombre,
+          apellido: newPaciente.apellido,
+          lesion: newPaciente.lesion || "General",
+          tipo: newPaciente.tipo,
+          sesiones_compradas: newPaciente.sesiones,
+          sesiones_disponibles: newPaciente.sesiones,
+        }),
+      });
+
+      if (res.ok) {
+        alert("Paciente agregado correctamente");
+        setNewPaciente({ nombre: "", apellido: "", lesion: "", tipo: "clinica", sesiones: 10 });
+        setMostrarNuevo(false);
+      } else {
+        alert("Error al agregar paciente");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error al agregar paciente");
+    } finally {
+      setLoadingPaciente(false);
     }
   };
 
@@ -130,9 +190,17 @@ export default function SesionesPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#eef4f6] to-white">
       <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
         <div className="max-w-6xl mx-auto flex justify-between items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-[#0f5c4d]">ReActive</h1>
-            <p className="text-sm text-gray-600">Historial de sesiones</p>
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-[#0f5c4d]">ReActive</h1>
+              <p className="text-sm text-gray-600">Historial de sesiones</p>
+            </div>
+            <button
+              onClick={() => setMostrarNuevo(true)}
+              className="text-sm bg-[#2563eb] text-white px-3 py-2 rounded-md hover:opacity-90 font-medium"
+            >
+              ➕ Agregar paciente
+            </button>
           </div>
           <button
             onClick={() => router.back()}
@@ -237,6 +305,9 @@ export default function SesionesPage() {
                     <th className="text-left p-3 text-[#0f5c4d] font-semibold">
                       Observaciones
                     </th>
+                    <th className="text-center p-3 text-[#0f5c4d] font-semibold">
+                      Acción
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -286,6 +357,14 @@ export default function SesionesPage() {
                         <td className="p-3 text-xs text-gray-600 truncate">
                           {s.observaciones || "-"}
                         </td>
+                        <td className="p-3 text-center">
+                          <button
+                            onClick={() => handleEliminar(s.id)}
+                            className="text-red-600 hover:text-red-800 text-xs font-medium"
+                          >
+                            🗑️ Eliminar
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -295,6 +374,82 @@ export default function SesionesPage() {
           )}
         </div>
       </div>
+
+      {mostrarNuevo && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-20">
+          <div className="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold text-[#0f5c4d] mb-6">Agregar Paciente</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">Nombre</label>
+                <input
+                  type="text"
+                  value={newPaciente.nombre}
+                  onChange={(e) => setNewPaciente({ ...newPaciente, nombre: e.target.value })}
+                  placeholder="Ej: Juan"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">Apellido</label>
+                <input
+                  type="text"
+                  value={newPaciente.apellido}
+                  onChange={(e) => setNewPaciente({ ...newPaciente, apellido: e.target.value })}
+                  placeholder="Ej: Pérez"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">Lesión / Motivo</label>
+                <input
+                  type="text"
+                  value={newPaciente.lesion}
+                  onChange={(e) => setNewPaciente({ ...newPaciente, lesion: e.target.value })}
+                  placeholder="Ej: Esguince de tobillo"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">Tipo</label>
+                <select
+                  value={newPaciente.tipo}
+                  onChange={(e) => setNewPaciente({ ...newPaciente, tipo: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                >
+                  <option value="clinica">Clínica</option>
+                  <option value="domicilio">Domicilio</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-2">Sesiones a Cargar</label>
+                <input
+                  type="number"
+                  value={newPaciente.sesiones}
+                  onChange={(e) => setNewPaciente({ ...newPaciente, sesiones: parseInt(e.target.value) })}
+                  min="1"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm bg-gray-50"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setMostrarNuevo(false)}
+                  className="flex-1 bg-gray-300 text-gray-700 font-medium py-2.5 rounded-md hover:opacity-90"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleAgregarPaciente}
+                  disabled={loadingPaciente}
+                  className="flex-1 bg-[#2563eb] text-white font-medium py-2.5 rounded-md hover:opacity-90 disabled:opacity-50"
+                >
+                  {loadingPaciente ? "Agregando..." : "Agregar Paciente"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
