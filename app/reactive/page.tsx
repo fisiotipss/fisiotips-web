@@ -76,7 +76,7 @@ export default function ReActivePage() {
             role="img"
             aria-label="Vista al Lago Calcagno desde ReActive"
             className="h-72 w-full bg-cover bg-center sm:h-96"
-            style={{ backgroundImage: "url(/reactive/lago.jpg)" }}
+            style={{ backgroundImage: "url(/reactive/lago.png)" }}
           />
           <div className="p-8 text-white sm:p-10">
             <p className="text-sm uppercase tracking-[0.25em] text-white/70">Shangrilá · Frente al lago</p>
@@ -84,6 +84,18 @@ export default function ReActivePage() {
             <p className="mt-4 max-w-2xl text-white/90">
               Un espacio con vista al agua y al verde para entrenar y recuperarte rodeado de naturaleza.
             </p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <img
+                src="/reactive/lago-comunal.png"
+                alt="Lago Calcagno"
+                className="h-48 w-full rounded-2xl object-cover"
+              />
+              <img
+                src="/reactive/lago-edificios.webp"
+                alt="Vista de los edificios frente al lago"
+                className="h-48 w-full rounded-2xl object-cover"
+              />
+            </div>
             <div className="mt-6">
               <BotonPrincipal href={COMO_LLEGAR}>Ver cómo llegar</BotonPrincipal>
             </div>
