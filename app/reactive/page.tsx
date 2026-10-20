@@ -139,7 +139,7 @@ export default function ReActivePage() {
             role="img"
             aria-label="Vista al Lago Calcagno desde ReActive"
             className="h-72 w-full bg-cover bg-center sm:h-96"
-            style={{ backgroundImage: "url(/reactive/lago-ventana.jpg)" }}
+            style={{ backgroundImage: "url(/reactive/lago-sala.jpg)" }}
           />
           <div className="p-8 text-white sm:p-10">
             <p className="text-xs uppercase tracking-[0.3em] text-[#d8c7a4]">Shangrilá · Frente al lago</p>
