@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import ReservaForm from "@/components/ReservaForm";
 
 export const metadata: Metadata = {
@@ -84,6 +85,17 @@ function BotonPrincipal({ href, children }: { href: string; children: React.Reac
 export default function ReActivePage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#14213d] via-[#56677f] to-white text-[#14213d]">
+      {/* Google tag (gtag.js) */}
+      <Script src="https://www.googletagmanager.com/gtag/js?id=G-YVMLEDJ1WS" strategy="afterInteractive" />
+      <Script id="google-tag-reactive" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-YVMLEDJ1WS');
+        `}
+      </Script>
+
       {/* Menú fijo */}
       <header className="sticky top-0 z-30 border-b border-[#a88a57]/40 bg-[#14213d]/95 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3 text-white">
