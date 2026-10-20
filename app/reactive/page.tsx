@@ -135,11 +135,14 @@ export default function ReActivePage() {
       {/* Lago y ubicación */}
       <section id="lago" className="mx-auto max-w-5xl scroll-mt-24 px-6 py-16">
         <div className="overflow-hidden rounded-2xl bg-[#14213d] shadow-xl">
-          <div
-            role="img"
+          <video
+            src="/reactive/lago-video.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
             aria-label="Vista al Lago Calcagno desde ReActive"
-            className="h-72 w-full bg-cover bg-center sm:h-96"
-            style={{ backgroundImage: "url(/reactive/lago-sala.jpg)" }}
+            className="h-72 w-full object-cover sm:h-96"
           />
           <div className="p-8 text-white sm:p-10">
             <p className="text-xs uppercase tracking-[0.3em] text-[#d8c7a4]">Shangrilá · Frente al lago</p>
