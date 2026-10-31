@@ -62,10 +62,10 @@ const estudios = [
   },
 ];
 
-const instalaciones = [
+const instalaciones: { src: string; titulo: string; alt: string; completa?: boolean }[] = [
   { src: "/reactive/gym-banda.jpg", titulo: "Movilidad y fuerza", alt: "Trabajo de movilidad y fuerza con bandas" },
   { src: "/reactive/zona-entrenamiento-amplia.jpg", titulo: "Zona de entrenamiento", alt: "Zona de entrenamiento ReActive" },
-  { src: "/reactive/activacion-recovery.jpg", titulo: "Activación", alt: "Ejercicios de activación" },
+  { src: "/reactive/activacion-recovery.jpg", titulo: "Activación", alt: "Ejercicios de activación", completa: true },
   { src: "/reactive/sala-pesas.jpg", titulo: "Sala de trabajo", alt: "Sala de trabajo con pesas" },
 ];
 
@@ -190,7 +190,7 @@ export default function ReActivePage() {
               <img
                 src={f.src}
                 alt={f.alt}
-                className="h-64 w-full object-cover"
+                className={`h-64 w-full bg-[#14213d] ${f.completa ? "object-contain" : "object-cover"}`}
               />
               <div className="p-5 text-center">
                 <h3 className="text-lg font-semibold text-[#14213d]">{f.titulo}</h3>
