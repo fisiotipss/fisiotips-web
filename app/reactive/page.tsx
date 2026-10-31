@@ -190,7 +190,7 @@ export default function ReActivePage() {
               <img
                 src={f.src}
                 alt={f.alt}
-                className={`h-64 w-full bg-[#14213d] ${f.completa ? "object-contain" : "object-cover"}`}
+                className="h-64 w-full object-cover"
               />
               <div className="p-5 text-center">
                 <h3 className="text-lg font-semibold text-[#14213d]">{f.titulo}</h3>
