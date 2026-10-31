@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { consulta, sucursales, puntosAtencion } from "@/content/site-copy";
+import { consulta, puntosAtencion } from "@/content/site-copy";
 import Reveal from "./Reveal";
 
 const demandaFisicaOpciones = [
@@ -55,9 +55,10 @@ export default function ReservaForm() {
         throw new Error(data.error || "No se pudo enviar el formulario.");
       }
 
+      const data = await res.json();
       setEstado("redirigiendo");
       setTimeout(() => {
-        window.location.href = consulta.mercadoPagoLink;
+        window.location.href = data.redirectUrl;
       }, 300);
     } catch (err) {
       setEstado("error");
@@ -127,30 +128,6 @@ export default function ReservaForm() {
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Sucursal más conveniente
-            </label>
-            <select
-              name="sucursal"
-              required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-celeste focus:outline-none focus:ring-1 focus:ring-celeste"
-              defaultValue=""
-            >
-              <option value="" disabled>
-                Seleccioná una opción
-              </option>
-              {sucursales.map((op) => (
-                <option key={op.value} value={op.value}>
-                  {op.label}
-                </option>
-              ))}
-            </select>
-            <p className="mt-1 text-xs text-gray-400">
-              La dirección exacta te la pasamos por WhatsApp una vez confirmado el pago.
-            </p>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
               Preferencia horaria para la evaluación
             </label>
             <select
@@ -177,18 +154,9 @@ export default function ReservaForm() {
           name="tratamientosPrevios"
         />
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            Estudios médicos (PDF o JPG, opcional)
-          </label>
-          <input
-            type="file"
-            name="estudios"
-            accept="application/pdf,image/jpeg,image/png"
-            className="block w-full text-sm text-gray-600 file:mr-4 file:rounded-full file:border-0 file:bg-primary-light file:px-4 file:py-2 file:text-sm file:font-medium file:text-celeste hover:file:bg-celeste/10"
-          />
-          <p className="mt-1 text-xs text-gray-400">Tamaño máximo recomendado: 8 MB.</p>
-        </div>
+        <p className="text-xs text-gray-500">
+          Si tenés estudios médicos, los podés enviar por WhatsApp después de pagar.
+        </p>
 
         {estado === "error" && (
           <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{errorMsg}</p>

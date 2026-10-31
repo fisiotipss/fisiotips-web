@@ -68,6 +68,41 @@ export async function POST(req: NextRequest) {
     const payment = new Payment(client);
     const info = await payment.get({ id: paymentId });
 
+    // Formulario de evaluación: se envía recién cuando el pago está aprobado.
+    const formulario = (info.metadata ?? {}) as Record<string, string>;
+    if (info.status === "approved" && formulario.nombre && process.env.RESEND_API_KEY && process.env.NOTIFY_EMAIL) {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const filas = [
+        ["Nombre completo", formulario.nombre],
+        ["Tu teléfono", formulario.telefono || "—"],
+        ["Edad", formulario.edad || "—"],
+        ["Deporte", formulario.deporte || "—"],
+        ["Ciudad / país", formulario.ubicacion || "—"],
+        ["Nivel de esfuerzo físico laboral", formulario.demanda_fisica || "—"],
+        ["Preferencia horaria", formulario.preferencia_horaria || "—"],
+        ["Motivo de consulta", formulario.motivo_consulta || "—"],
+        ["Tratamientos previos y resultados", formulario.tratamientos_previos || "—"],
+        ["Pagado", `${info.transaction_amount} ${info.currency_id}`],
+      ];
+
+      await resend.emails.send({
+        from: process.env.RESEND_FROM || "Fisiotips <onboarding@resend.dev>",
+        to: process.env.NOTIFY_EMAIL,
+        subject: `Nueva evaluación pagada — ${formulario.nombre}`,
+        html: `
+          <h2>Nueva evaluación pagada — ${formulario.nombre}</h2>
+          <table cellpadding="6" style="border-collapse:collapse">
+            ${filas
+              .map(
+                ([label, valor]) =>
+                  `<tr><td style="font-weight:600;border:1px solid #eee">${label}</td><td style="border:1px solid #eee">${valor}</td></tr>`
+              )
+              .join("")}
+          </table>
+        `,
+      });
+    }
+
     if (info.status === "approved" && process.env.RESEND_API_KEY && process.env.NOTIFY_EMAIL) {
       const payerId = info.payer?.email || "unknown";
       const isDuplicate = detectDuplicatePayment(payerId, info.transaction_amount || 0);

@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
-import { sucursales } from "@/content/site-copy";
+import { consulta } from "@/content/site-copy";
 
 export const runtime = "nodejs";
-
-const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8 MB
 
 const processedRequests = new Map<string, number>();
 const ipRequests = new Map<string, number>();
 const activePendingPayments = new Map<string, number>();
+
+const PREFERENCIAS_HORARIAS = ["manana", "tarde", "ambas"];
 
 function deduplicateRequest(deduplicationId: string): boolean {
   const now = Date.now();
@@ -51,6 +50,8 @@ function campoTexto(formData: FormData, nombre: string) {
   return typeof valor === "string" ? valor.trim() : "";
 }
 
+// Mercado Pago guarda estos datos junto al pago. El webhook los lee al aprobarse el pago
+// y recién ahí se envía el correo con la información. Si no se paga, no llega nada.
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
@@ -74,30 +75,37 @@ export async function POST(req: NextRequest) {
 
     const datos = {
       nombre: campoTexto(formData, "nombre"),
-      telefonoEmergencia: campoTexto(formData, "telefonoEmergencia"),
+      telefono: campoTexto(formData, "telefonoEmergencia"),
       edad: campoTexto(formData, "edad"),
       deporte: campoTexto(formData, "deporte"),
       ubicacion: campoTexto(formData, "ubicacion"),
       demandaFisica: campoTexto(formData, "demandaFisica"),
-      sucursal: campoTexto(formData, "sucursal"),
+      preferenciaHoraria: campoTexto(formData, "preferenciaHoraria"),
       motivoConsulta: campoTexto(formData, "motivoConsulta"),
       tratamientosPrevios: campoTexto(formData, "tratamientosPrevios"),
     };
 
     const camposObligatorios: (keyof typeof datos)[] = [
       "nombre",
-      "telefonoEmergencia",
+      "telefono",
       "edad",
       "deporte",
       "ubicacion",
       "demandaFisica",
-      "sucursal",
+      "preferenciaHoraria",
       "motivoConsulta",
     ];
     const faltante = camposObligatorios.find((campo) => !datos[campo]);
     if (faltante) {
       return NextResponse.json(
         { error: `Falta completar el campo "${faltante}".` },
+        { status: 400 }
+      );
+    }
+
+    if (!PREFERENCIAS_HORARIAS.includes(datos.preferenciaHoraria)) {
+      return NextResponse.json(
+        { error: "Elegí una preferencia horaria válida." },
         { status: 400 }
       );
     }
@@ -113,70 +121,78 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const accessToken = process.env.MP_ACCESS_TOKEN;
+    if (!accessToken) {
+      console.error("MP_ACCESS_TOKEN no configurado; no se puede crear el pago.");
+      return NextResponse.json(
+        { error: "El pago no está disponible en este momento. Intentá más tarde." },
+        { status: 500 }
+      );
+    }
+
     activePendingPayments.set(emailKey, now);
     if (activePendingPayments.size > 500) {
       const oldestKey = activePendingPayments.keys().next().value as string;
       if (oldestKey) activePendingPayments.delete(oldestKey);
     }
 
-    const archivo = formData.get("estudios");
-    let attachment: { filename: string; content: string } | undefined;
+    const origin = req.nextUrl.origin;
+    const preferencia = {
+      items: [
+        {
+          title: "Evaluación de 1 hora y media",
+          quantity: 1,
+          unit_price: consulta.precioUYU,
+          currency_id: "UYU",
+        },
+      ],
+      payer: { name: datos.nombre },
+      metadata: {
+        nombre: datos.nombre,
+        telefono: datos.telefono,
+        edad: datos.edad,
+        deporte: datos.deporte,
+        ubicacion: datos.ubicacion,
+        demanda_fisica: datos.demandaFisica,
+        preferencia_horaria: datos.preferenciaHoraria,
+        motivo_consulta: datos.motivoConsulta.slice(0, 500),
+        tratamientos_previos: datos.tratamientosPrevios.slice(0, 500),
+      },
+      back_urls: {
+        success: `${origin}/gracias`,
+        pending: `${origin}/gracias`,
+        failure: `${origin}/pago-fallido`,
+      },
+      auto_return: "approved",
+    };
 
-    if (archivo instanceof File && archivo.size > 0) {
-      if (archivo.size > MAX_FILE_BYTES) {
-        return NextResponse.json(
-          { error: "El archivo adjunto supera el tamaño máximo permitido (8 MB)." },
-          { status: 400 }
-        );
-      }
-      const buffer = Buffer.from(await archivo.arrayBuffer());
-      attachment = { filename: archivo.name, content: buffer.toString("base64") };
+    const res = await fetch("https://api.mercadopago.com/checkout/preferences", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(preferencia),
+    });
+
+    if (!res.ok) {
+      console.error("Error creando preferencia de Mercado Pago:", res.status, await res.text());
+      return NextResponse.json(
+        { error: "No se pudo iniciar el pago. Intentá nuevamente en unos minutos." },
+        { status: 500 }
+      );
     }
 
-    // Enviar email con los datos del formulario. El pago se completa aparte,
-    // en el link de Mercado Pago al que redirige el formulario.
-    if (process.env.RESEND_API_KEY && process.env.NOTIFY_EMAIL) {
-      const resend = new Resend(process.env.RESEND_API_KEY);
-
-      const filas = [
-        ["Nombre completo", datos.nombre],
-        ["Teléfono de emergencia", datos.telefonoEmergencia || "—"],
-        ["Edad", datos.edad],
-        ["Deporte", datos.deporte],
-        ["Ciudad / país", datos.ubicacion],
-        ["Nivel de esfuerzo físico laboral", datos.demandaFisica],
-        [
-          "Sucursal más conveniente",
-          sucursales.find((s) => s.value === datos.sucursal)?.label || datos.sucursal,
-        ],
-        ["Motivo de consulta", datos.motivoConsulta],
-        ["Tratamientos previos y resultados", datos.tratamientosPrevios || "—"],
-      ];
-
-      const html = `
-        <h2>Nueva evaluación reservada — ${datos.nombre}</h2>
-        <table cellpadding="6" style="border-collapse:collapse">
-          ${filas
-            .map(
-              ([label, valor]) =>
-                `<tr><td style="font-weight:600;border:1px solid #eee">${label}</td><td style="border:1px solid #eee">${valor}</td></tr>`
-            )
-            .join("")}
-        </table>
-      `;
-
-      await resend.emails.send({
-        from: process.env.RESEND_FROM || "Fisiotips <onboarding@resend.dev>",
-        to: process.env.NOTIFY_EMAIL,
-        subject: `Nueva evaluación reservada — ${datos.nombre}`,
-        html,
-        attachments: attachment ? [attachment] : undefined,
-      });
-    } else {
-      console.warn("RESEND_API_KEY o NOTIFY_EMAIL no configurados; se omite el envío de email.");
+    const data = await res.json();
+    if (!data.init_point) {
+      console.error("Preferencia de Mercado Pago sin init_point:", data);
+      return NextResponse.json(
+        { error: "No se pudo iniciar el pago. Intentá nuevamente en unos minutos." },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, redirectUrl: data.init_point });
   } catch (error) {
     console.error("Error en /api/consulta:", error);
     return NextResponse.json(

@@ -118,7 +118,7 @@ export const consulta = {
     "Garantía: si vemos que tu caso no es para nosotros, te devolvemos el 50% de lo pagado",
   ],
   descripcion:
-    "1 hora y media dedicada solo a tu caso — no 15 minutos como en mutualistas u otros centros. Completá tus datos y adjuntá tus estudios si los tenés. Después de enviarlo, vas a poder pagar la evaluación de forma segura con Mercado Pago. Una vez confirmado el pago, te vamos a escribir por WhatsApp para coordinar el día, horario y pasarte la dirección exacta del consultorio.",
+    "1 hora y media dedicada solo a tu caso — no 15 minutos como en mutualistas u otros centros. Completá tus datos y pagá la evaluación de forma segura con Mercado Pago. Una vez confirmado el pago, te vamos a escribir por WhatsApp para coordinar el día, horario y pasarte la dirección exacta del consultorio. Si tenés estudios médicos, los podés enviar por WhatsApp después de pagar.",
   precioTexto: "$1.900 UYU",
-  mercadoPagoLink: "https://mpago.la/1U58qCx",
+  precioUYU: 1900,
 };
