@@ -169,7 +169,7 @@ export default function ReActivePage() {
                 className="h-48 w-full rounded-xl object-cover"
               />
               <img
-                src="/reactive/lago-edificios.webp"
+                src="/reactive/lago-arcoiris.jpg"
                 alt="Vista de los edificios frente al lago"
                 className="h-48 w-full rounded-xl object-cover"
               />
