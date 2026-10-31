@@ -65,7 +65,7 @@ const estudios = [
 const instalaciones: { src: string; titulo: string; alt: string; completa?: boolean }[] = [
   { src: "/reactive/gym-banda.jpg", titulo: "Movilidad y fuerza", alt: "Trabajo de movilidad y fuerza con bandas" },
   { src: "/reactive/zona-entrenamiento-amplia.jpg", titulo: "Zona de entrenamiento", alt: "Zona de entrenamiento ReActive" },
-  { src: "/reactive/activacion-recovery.jpg", titulo: "Activación", alt: "Ejercicios de activación", completa: true },
+  { src: "/reactive/activacion-botas.webp", titulo: "Activación", alt: "Ejercicios de activación", completa: true },
   { src: "/reactive/sala-pesas.jpg", titulo: "Sala de trabajo", alt: "Sala de trabajo con pesas" },
 ];
 
