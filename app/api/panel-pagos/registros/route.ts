@@ -83,14 +83,13 @@ export async function POST(request: NextRequest) {
 
     // Reglas de cobro desde hoy: si la lesión del paciente dice "entrenamiento", la sesión se marca.
     const nombreNormalizado = normalizarNombre(paciente);
-    const [primerNombre, ...resto] = nombreNormalizado.split(" ");
-    const { data: pacienteInfo } = await supabase
+    const { data: listaPacientes } = await supabase
       .from("pacientes")
-      .select("lesion, apellido")
-      .eq("nombre", primerNombre)
-      .eq("apellido", resto.join(" "))
-      .limit(1);
-    const entrenamiento = esEntrenamiento(pacienteInfo?.[0]?.lesion);
+      .select("nombre, apellido, lesion");
+    const pacienteInfo = (listaPacientes || []).find(
+      (p) => normalizarNombre(`${p.nombre || ""} ${p.apellido || ""}`) === nombreNormalizado
+    );
+    const entrenamiento = esEntrenamiento(pacienteInfo?.lesion);
 
     const registroNuevo = {
       ...registro,
