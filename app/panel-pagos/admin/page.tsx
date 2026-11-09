@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { calcularCobros } from "@/lib/tarifas";
 
 interface AuthData {
   email: string;
@@ -259,78 +260,17 @@ export default function AdminDashboard() {
   };
 
   const calcularPagos = () => {
-    const detallesPorUsuario = new Map<string, Array<{ fecha: string; hora: string; pacientes: number; precio: number }>>();
-
-    registros.forEach((reg) => {
-      if (!detallesPorUsuario.has(reg.email)) {
-        detallesPorUsuario.set(reg.email, []);
-      }
-    });
-
-    detallesPorUsuario.forEach((_, email) => {
-      const regsDelUsuario = registros.filter((r) => r.email === email);
-      const usuario = usuarios.find((u) => u.email === email);
-      const esSocio = usuario?.rol === "Socio";
-      const porFechaHora = new Map<string, Registro[]>();
-
-      regsDelUsuario.forEach((reg) => {
-        let key = "";
-        if (reg.tipo === "clinica" && reg.hora_desde) {
-          const horaAg = agruparHora(reg.hora_desde);
-          key = `${reg.fecha}|clinica|${horaAg}`;
-        } else if (reg.tipo === "domicilio_a") {
-          key = `${reg.fecha}|domicilio_a`;
-        } else if (reg.tipo === "domicilio_b") {
-          key = `${reg.fecha}|domicilio_b`;
-        }
-
-        if (!porFechaHora.has(key)) {
-          porFechaHora.set(key, []);
-        }
-        porFechaHora.get(key)!.push(reg);
-      });
-
-      const detalles: Array<{ fecha: string; hora: string; pacientes: number; precio: number }> = [];
-
-      porFechaHora.forEach((regsEnHora, key) => {
-        const [fecha, ...resto] = key.split("|");
-        const cantPacientes = regsEnHora.length;
-        let precio = 0;
-        let hora = "";
-
-        if (resto[0] === "clinica") {
-          hora = resto[1];
-          if (esSocio) {
-            precio = cantPacientes * 350;
-          } else {
-            if (cantPacientes >= 3) precio = 550;
-            else if (cantPacientes === 2) precio = 500;
-            else precio = 250;
-          }
-        } else if (resto[0] === "domicilio_a") {
-          hora = "Domicilio A";
-          precio = esSocio ? cantPacientes * 350 : 700;
-        } else if (resto[0] === "domicilio_b") {
-          hora = "Domicilio B";
-          precio = esSocio ? cantPacientes * 350 : 1000;
-        }
-
-        detalles.push({ fecha, hora, pacientes: cantPacientes, precio });
-      });
-
-      detallesPorUsuario.set(email, detalles);
-    });
-
-    return Array.from(detallesPorUsuario.entries()).map(([email, detalles]) => {
+    const emails = Array.from(new Set(registros.map((r) => r.email)));
+    return emails.map((email) => {
       const usuario = usuarios.find((u) => u.email === email);
       const tipo = usuario?.rol === "Socio" ? "Socio" : "Fisio";
-      const monto = detalles.reduce((sum, d) => sum + d.precio, 0);
-
+      const regs = registros.filter((r) => r.email === email);
+      const { detalles, total } = calcularCobros(regs, tipo);
       return {
         email,
         nombre: usuario?.nombre || email,
         tipo,
-        monto,
+        monto: total,
         detalles,
       };
     });

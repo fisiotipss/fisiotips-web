@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { calcularCobros } from "@/lib/tarifas";
 
 interface Sesion {
   id: string;
@@ -123,62 +124,8 @@ export default function SesionesPage() {
     return `${String(horaAgrupada).padStart(2, "0")}:00`;
   };
 
-  const calcularDesglose = () => {
-    const rol = JSON.parse(localStorage.getItem("panelAuth") || "{}").role;
-    const esSocio = rol === "Socio";
-    const porFechaHora = new Map<string, Sesion[]>();
-
-    sesiones.forEach((s) => {
-      let key = "";
-      if (s.tipo === "clinica" && s.hora_desde) {
-        const horaAg = agruparHora(s.hora_desde);
-        key = `${s.fecha}|clinica|${horaAg}`;
-      } else if (s.tipo === "domicilio_a") {
-        key = `${s.fecha}|domicilio_a`;
-      } else if (s.tipo === "domicilio_b") {
-        key = `${s.fecha}|domicilio_b`;
-      }
-
-      if (!porFechaHora.has(key)) {
-        porFechaHora.set(key, []);
-      }
-      porFechaHora.get(key)!.push(s);
-    });
-
-    const desglose: Array<{ fecha: string; hora: string; pacientes: number; precio: number }> = [];
-    let total = 0;
-
-    porFechaHora.forEach((sesList, key) => {
-      const [fecha, ...resto] = key.split("|");
-      const cantPacientes = sesList.length;
-      let precio = 0;
-      let hora = "";
-
-      if (resto[0] === "clinica") {
-        hora = resto[1];
-        if (esSocio) {
-          precio = cantPacientes * 350;
-        } else {
-          if (cantPacientes >= 3) precio = 550;
-          else if (cantPacientes === 2) precio = 500;
-          else precio = 250;
-        }
-      } else if (resto[0] === "domicilio_a") {
-        hora = "Domicilio A";
-        precio = esSocio ? cantPacientes * 350 : 700;
-      } else if (resto[0] === "domicilio_b") {
-        hora = "Domicilio B";
-        precio = esSocio ? cantPacientes * 350 : 1000;
-      }
-
-      desglose.push({ fecha, hora, pacientes: cantPacientes, precio });
-      total += precio;
-    });
-
-    return { desglose, total };
-  };
-
-  const { desglose, total } = calcularDesglose();
+  const rolActual = JSON.parse(localStorage.getItem("panelAuth") || "{}").role === "Socio" ? "Socio" : "Fisio";
+  const { detalles: desglose, total, montoPorRegistro } = calcularCobros(sesiones, rolActual);
 
   const stats = {
     total: sesiones.length,
@@ -312,21 +259,7 @@ export default function SesionesPage() {
                 </thead>
                 <tbody>
                   {sesiones.map((s) => {
-                    let precioFila = 0;
-                    const rol = JSON.parse(localStorage.getItem("panelAuth") || "{}").role;
-                    const esSocio = rol === "Socio";
-
-                    if (s.tipo === "clinica" && s.hora_desde) {
-                      const horaAg = agruparHora(s.hora_desde);
-                      const detalle = desglose.find((d) => d.fecha === s.fecha && d.hora === horaAg);
-                      precioFila = detalle ? detalle.precio / detalle.pacientes : 250;
-                    } else if (s.tipo === "domicilio_a") {
-                      precioFila = esSocio ? 350 : 700;
-                    } else if (s.tipo === "domicilio_b") {
-                      precioFila = esSocio ? 350 : 1000;
-                    } else {
-                      precioFila = 250;
-                    }
+                    const precioFila = montoPorRegistro.get(s.id) ?? 0;
 
                     return (
                       <tr

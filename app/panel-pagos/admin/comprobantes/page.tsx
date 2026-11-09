@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { TARIFA_VERSION_NUEVA, calcularCobros } from "@/lib/tarifas";
 
 interface AuthData {
   role: string;
@@ -17,9 +18,15 @@ interface Usuario {
 }
 
 interface Registro {
+  id: string;
   email: string;
   fecha: string;
   paciente: string;
+  tipo: string;
+  hora_desde?: string | null;
+  tarifa_version?: number | null;
+  es_entrenamiento?: boolean | null;
+  creado?: string | null;
 }
 
 interface Comprobante {
@@ -105,10 +112,13 @@ export default function GestionarComprobantes() {
         const comprobantesCalculados: Comprobante[] = [];
         porUsuario.forEach((regs, email) => {
           const usuario = usuarios.find((u) => u.email === email);
+          const rolC = usuario?.rol === "Socio" ? "Socio" : "Fisio";
+          // Sesiones anteriores: mismo cálculo de siempre. Sesiones nuevas: reglas con tope.
+          const viejas = regs.filter((r) => r.tarifa_version !== TARIFA_VERSION_NUEVA);
+          const nuevas = regs.filter((r) => r.tarifa_version === TARIFA_VERSION_NUEVA);
           const monto =
-            usuario?.rol === "Socio"
-              ? regs.length * 350
-              : regs.length * 250;
+            (rolC === "Socio" ? viejas.length * 350 : viejas.length * 250) +
+            calcularCobros(nuevas, rolC).total;
 
           comprobantesCalculados.push({
             id: email,

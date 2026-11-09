@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import {
+  TARIFA_VERSION_NUEVA,
+  esEntrenamiento,
+  normalizarNombre,
+} from "@/lib/tarifas";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
@@ -76,12 +81,37 @@ export async function POST(request: NextRequest) {
       observaciones,
     };
 
-    console.log("Intentando insertar registro:", registro);
+    // Reglas de cobro desde hoy: si la lesión del paciente dice "entrenamiento", la sesión se marca.
+    const nombreNormalizado = normalizarNombre(paciente);
+    const [primerNombre, ...resto] = nombreNormalizado.split(" ");
+    const { data: pacienteInfo } = await supabase
+      .from("pacientes")
+      .select("lesion, apellido")
+      .eq("nombre", primerNombre)
+      .eq("apellido", resto.join(" "))
+      .limit(1);
+    const entrenamiento = esEntrenamiento(pacienteInfo?.[0]?.lesion);
 
-    const { data: regData, error: regError } = await supabase
+    const registroNuevo = {
+      ...registro,
+      tarifa_version: TARIFA_VERSION_NUEVA,
+      es_entrenamiento: entrenamiento,
+    };
+
+    console.log("Intentando insertar registro:", registroNuevo);
+
+    // Si la base todavía no tiene las columnas nuevas, se guarda igual como antes.
+    let { data: regData, error: regError } = await supabase
       .from("registros")
-      .insert([registro])
+      .insert([registroNuevo])
       .select();
+
+    if (regError && /tarifa_version|es_entrenamiento/.test(regError.message || "")) {
+      ({ data: regData, error: regError } = await supabase
+        .from("registros")
+        .insert([registro])
+        .select());
+    }
 
     if (regError) {
       console.error("Error Supabase POST:", JSON.stringify(regError));
