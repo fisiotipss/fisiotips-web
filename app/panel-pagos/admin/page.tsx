@@ -45,6 +45,8 @@ export default function AdminDashboard() {
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
+  const [editPaciente, setEditPaciente] = useState<{ id: string; nombre: string; apellido: string; lesion: string; tipo: string; compradas: string; disponibles: string } | null>(null);
+  const [guardandoPaciente, setGuardandoPaciente] = useState(false);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState("");
   const [_, rerender] = useState(0);
   const mesRef = React.useRef("2026-07");
@@ -316,6 +318,46 @@ export default function AdminDashboard() {
       alert("Error al eliminar registros");
     } finally {
       setEliminando(false);
+    }
+  };
+
+  const abrirEditarPaciente = (p: Paciente & { tipo?: string }) => {
+    setEditPaciente({
+      id: p.id,
+      nombre: p.nombre,
+      apellido: p.apellido,
+      lesion: p.lesion || "",
+      tipo: p.tipo === "domicilio" ? "domicilio" : "clinica",
+      compradas: String(p.sesiones_compradas),
+      disponibles: String(p.sesiones_disponibles),
+    });
+  };
+
+  const guardarEdicionPaciente = async () => {
+    if (!editPaciente) return;
+    setGuardandoPaciente(true);
+    try {
+      const res = await fetch(`/api/panel-pagos/pacientes?id=${editPaciente.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lesion: editPaciente.lesion,
+          tipo: editPaciente.tipo,
+          sesiones_compradas: parseInt(editPaciente.compradas, 10),
+          sesiones_disponibles: parseInt(editPaciente.disponibles, 10),
+        }),
+      });
+      if (!res.ok) {
+        alert("No se pudo guardar. Intentá nuevamente.");
+        return;
+      }
+      setEditPaciente(null);
+      cargarDatos();
+    } catch (error) {
+      console.error("Error guardando paciente:", error);
+      alert("Error de conexión al guardar.");
+    } finally {
+      setGuardandoPaciente(false);
     }
   };
 
@@ -696,6 +738,76 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {editPaciente && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-20">
+            <div className="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-md space-y-4">
+              <h3 className="text-lg font-bold text-[#0f5c4d]">
+                Editar: {editPaciente.nombre} {editPaciente.apellido}
+              </h3>
+              <p className="text-xs text-gray-500">
+                El nombre no se puede cambiar desde aquí. Los cambios de lesión aplican a las sesiones nuevas.
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-1">Lesión / Motivo</label>
+                <input
+                  type="text"
+                  value={editPaciente.lesion}
+                  onChange={(e) => setEditPaciente({ ...editPaciente, lesion: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0f5c4d] mb-1">Tipo</label>
+                <select
+                  value={editPaciente.tipo}
+                  onChange={(e) => setEditPaciente({ ...editPaciente, tipo: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+                >
+                  <option value="clinica">Clínica</option>
+                  <option value="domicilio">Domicilio</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-[#0f5c4d] mb-1">Compradas</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editPaciente.compradas}
+                    onChange={(e) => setEditPaciente({ ...editPaciente, compradas: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#0f5c4d] mb-1">Disponibles</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editPaciente.disponibles}
+                    onChange={(e) => setEditPaciente({ ...editPaciente, disponibles: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditPaciente(null)}
+                  className="flex-1 bg-gray-300 text-gray-700 font-medium py-2.5 rounded-md hover:opacity-90"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={guardarEdicionPaciente}
+                  disabled={guardandoPaciente}
+                  className="flex-1 bg-[#2563eb] text-white font-medium py-2.5 rounded-md hover:opacity-90 disabled:opacity-50"
+                >
+                  {guardandoPaciente ? "Guardando..." : "Guardar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {tab === "pacientes" && (
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-lg font-bold text-[#0f5c4d] mb-4">Pacientes en Sistema</h2>
@@ -707,6 +819,7 @@ export default function AdminDashboard() {
                     <th className="text-left p-3 text-[#0f5c4d] font-semibold">Lesión</th>
                     <th className="text-center p-3 text-[#0f5c4d] font-semibold">Compradas</th>
                     <th className="text-center p-3 text-[#0f5c4d] font-semibold">Disponibles</th>
+                    <th className="text-center p-3 text-[#0f5c4d] font-semibold">Acción</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -729,6 +842,14 @@ export default function AdminDashboard() {
                         {p.sesiones_disponibles}
                         {p.sesiones_disponibles === 0 && " ⚠"}
                         {p.sesiones_disponibles === 1 && " ⚠"}
+                      </td>
+                      <td className="p-3 text-center">
+                        <button
+                          onClick={() => abrirEditarPaciente(p)}
+                          className="text-xs bg-[#2563eb] text-white px-3 py-1 rounded hover:opacity-90"
+                        >
+                          Editar
+                        </button>
                       </td>
                     </tr>
                   ))}

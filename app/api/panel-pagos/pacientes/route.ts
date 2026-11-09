@@ -91,7 +91,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const id = request.nextUrl.searchParams.get("id");
-    const { sesiones_compradas, sesiones_disponibles } = await request.json();
+    const { sesiones_compradas, sesiones_disponibles, lesion, tipo } = await request.json();
 
     if (!id) {
       return NextResponse.json(
@@ -100,9 +100,20 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Solo se actualizan los campos que vienen en la solicitud. El nombre no se cambia desde aquí.
+    const cambios: Record<string, unknown> = {};
+    if (sesiones_compradas !== undefined) cambios.sesiones_compradas = sesiones_compradas;
+    if (sesiones_disponibles !== undefined) cambios.sesiones_disponibles = sesiones_disponibles;
+    if (typeof lesion === "string") cambios.lesion = lesion.trim();
+    if (tipo === "clinica" || tipo === "domicilio") cambios.tipo = tipo;
+
+    if (Object.keys(cambios).length === 0) {
+      return NextResponse.json({ error: "Nada para actualizar" }, { status: 400 });
+    }
+
     const { data, error } = await supabase
       .from("pacientes")
-      .update({ sesiones_compradas, sesiones_disponibles })
+      .update(cambios)
       .eq("id", id)
       .select();
 
